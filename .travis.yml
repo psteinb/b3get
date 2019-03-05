@@ -6,7 +6,7 @@ env:
     - SEGFAULT_SIGNALS=all
   matrix:
     - TOXENV=check
-    - TOXENV=docs
+#    - TOXENV=docs #commenting this out until we have readthedocs and pypi setup
 matrix:
   include:
     - python: '2.7'
