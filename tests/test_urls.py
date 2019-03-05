@@ -1,11 +1,13 @@
 import requests
-main_url = "https://data.broadinstitute.org/bbbc/image_sets.html"
 from bs4 import BeautifulSoup
+
+main_url = "https://data.broadinstitute.org/bbbc/image_sets.html"
+
 
 def test_b3_unavailable():
     url = main_url.replace('bbb', 'ccc')
     r = requests.get(url)
-    assert r.ok != True
+    assert not r.ok
 
 
 def test_b3_available():
