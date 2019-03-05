@@ -4,7 +4,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import io
-
 import re
 from glob import glob
 from os.path import basename
@@ -70,11 +69,11 @@ setup(
         'Issue Tracker': 'https://github.com/psteinb/b3get/issues',
     },
     keywords=[
-        # eg: 'keyword1', 'keyword2', 'keyword3',
+        'machine learning', 'data', 'download', 'life science', 'training', 'validation'
     ],
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
     install_requires=[
-        # eg: 'aspectlib==1.1.1', 'six>=1.7',
+        'requests>=2.20.0', 'beautifulsoup4>=4.7.1'
     ],
     extras_require={
         # eg:
