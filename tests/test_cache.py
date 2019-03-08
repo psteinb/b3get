@@ -1,5 +1,6 @@
 import tempfile
 import os
+import shutil
 from b3get.utils import tmp_location
 
 
@@ -12,7 +13,8 @@ def test_create_tempdir():
     tdir = tempfile.mkdtemp()
     assert os.path.exists(tdir)
     print("\n", tdir)
-    os.removedirs(tdir)
+
+    shutil.rmtree(tdir)
 
 
 def test_b3get_tempdir():
@@ -20,7 +22,7 @@ def test_b3get_tempdir():
     assert os.path.exists(tdir)
     assert os.path.isdir(tdir)
 
-    os.removedirs(tdir)
+    shutil.rmtree(tdir)
 
 
 def test_b3get_tempdir_reuse():
@@ -29,11 +31,11 @@ def test_b3get_tempdir_reuse():
     os.makedirs(exp)
     tdir = tmp_location()
     assert tdir == exp
-    os.removedirs(tdir)
+    shutil.rmtree(tdir)
 
 
 def test_b3get_tempdir_double_call():
     exp = tmp_location()
     tdir = tmp_location()
     assert tdir == exp
-    os.removedirs(tdir)
+    shutil.rmtree(tdir)

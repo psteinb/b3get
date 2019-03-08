@@ -1,5 +1,7 @@
 import tempfile
 import os
+import re
+
 
 def tmp_location():
     """ return a folder under /tmp or similar,
@@ -12,3 +14,12 @@ def tmp_location():
         return folders[0]
     else:
         return tempfile.mkdtemp(suffix='-b3get')
+
+
+def filter_files(alist, rex):
+    """ given a list (of strings), filter out items that match the regular express rex """
+    if not isinstance(rex,str) or len(rex) == 0:
+        return alist
+    compiled = re.compile(rex)
+    srcs = [item for item in alist if compiled.search(item)]
+    return srcs
