@@ -2,7 +2,8 @@ import os
 import requests
 from bs4 import BeautifulSoup
 from b3get.utils import filter_files
-from b3get.datasets import ds_006, ds_027
+from b3get.datasets import dataset, ds_006, ds_008, ds_027
+import pytest
 
 # manual tests for exploration
 
@@ -36,6 +37,14 @@ def test_006_construction():
     assert 'Human' in ds6_empty.title()
 
 
+def test_006_wrong_URL():
+    with pytest.raises(RuntimeError):
+        ds = dataset(None)
+
+    with pytest.raises(RuntimeError):
+        ds = ds_006("https://data.broadinstitute.org/bbbc/BBC027/")
+
+
 def test_027_construction():
     ds27 = ds_027("https://data.broadinstitute.org/bbbc/BBBC027/")
     assert ds27.baseurl
@@ -64,13 +73,13 @@ def test_027_list_images():
     assert len(imgs) == 6
 
 
-def test_006_pull_single():
-    ds6 = ds_006("https://data.broadinstitute.org/bbbc/BBBC006/")
-    imgs = ds6.list_images()
+def test_008_pull_single():
+    ds8 = ds_008()
+    imgs = ds8.list_images()
     assert len(imgs) > 0
-    few = filter_files(imgs, '.*_17.zip')
+    few = filter_files(imgs, '.*\.zip')
     assert len(few) == 1
-    downed = ds6.pull_images('.*_17.zip')
+    downed = ds8.pull_images('.*\.zip')
     assert downed
     assert len(downed) > 0
     assert os.path.exists(downed[0])
