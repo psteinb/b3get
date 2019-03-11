@@ -71,9 +71,10 @@ setup(
     keywords=[
         'machine learning', 'data', 'download', 'life science', 'training', 'validation'
     ],
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
+    #python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
+    python_requires='>=3.4, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
     install_requires=[
-        'requests>=2.20.0', 'beautifulsoup4>=4.7.1'
+        'requests>=2.20.0', 'beautifulsoup4>=4.7.1', 'tifffile>=2019.3.8', 'numpy>=1.11.3'
     ],
     extras_require={
         # eg:
