@@ -9,9 +9,9 @@ env:
 #    - TOXENV=docs #commenting this out until we have readthedocs and pypi setup
 matrix:
   include:
-    - python: '2.7'
-      env:
-        - TOXENV=py27,report,codecov
+    # - python: '2.7'
+    #   env:
+    #     - TOXENV=py27,report,codecov
     - python: '3.4'
       env:
         - TOXENV=py34,report,codecov
