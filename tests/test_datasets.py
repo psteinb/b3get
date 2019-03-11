@@ -146,18 +146,22 @@ def test_008_extract_gt():
     assert len(xtracted) == 24
     shutil.rmtree(tmp_location())
 
+
 def test_008_images_to_numpy():
+    shutil.rmtree(tmp_location())
     ds8 = ds_008()
     imgs = ds8.pull_images()
     assert len(imgs) > 0
     assert len(imgs) == 1
     xtracted = ds8.extract_images()
-    nplist = ds8.to_numpy(xtracted)
+    assert len(xtracted) == 24
+    nplist = ds8.to_numpy(os.path.split(xtracted[0])[0])
     assert nplist
     assert len(nplist) > 0
     assert len(nplist) == 24
+    assert nplist[0].shape != tuple()
+    assert nplist[0].shape == (512, 512)
     shutil.rmtree(tmp_location())
-
 
 
 def test_006_list_gt():

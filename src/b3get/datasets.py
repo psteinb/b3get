@@ -85,18 +85,28 @@ class dataset():
 
             r = requests.get(url)
             assert r.ok, "unable to access URL: {}".format(url)
+            print('downloading {0} ({1:.4} MB)'.format(zurl,exp_size/(1024.*1024.*1024.)))
             pulled_bytes = BytesIO(r.content)
 
             with open(dstf, 'wb') as fo:
                 fo.write(pulled_bytes.read())
 
             if os.stat(dstf).st_size == exp_size:
-                print("downloaded {0} to {1} ({2} kB)".format(url, dstf, exp_size/(1024.*1024.)))
+                print("downloaded {0} to {1} ({2:.4} MB)".format(url, dstf, exp_size/(1024.*1024.*1024.)))
                 done.append(dstf)
             else:
                 print("download of {0} to {1} failed ({2} != {3} B)".format(url, dstf, exp_size, os.stat(dstf).st_size ))
 
         return done
+
+    def pull_images(self, rex=""):
+        """ given a regular expression <rex>, download the image files matching it from the dataset site """
+        return self.pull_files(self.list_images(), rex)
+
+    def pull_gt(self, rex=""):
+        """ given a regular expression <rex>, download the ground truth files matching it from the dataset site """
+        return self.pull_files(self.list_gt(), rex)
+
 
     def extract_files(self, filelist, dstdir):
 
@@ -113,26 +123,21 @@ class dataset():
                 zf.close()
             after = set(glob.glob(os.path.join(dstdir, "*")))
             xpaths = after.difference(before)
+
             for entry in xpaths:
                 value.extend(glob.glob(os.path.join(entry, "*tif")))
 
         return value
-
-    def pull_images(self, rex=""):
-        """ given a regular expression <rex>, download the image files matching it from the dataset site """
-        return self.pull_files(self.list_images(), rex)
-
-    def pull_gt(self, rex=""):
-        """ given a regular expression <rex>, download the ground truth files matching it from the dataset site """
-        return self.pull_files(self.list_gt(), rex)
 
 
     def extract_images(self):
         """ check tmp_location for downloaded image zip files, if anything is found, extract them """
 
         tmp = tmp_location()
-        cands = glob.glob(os.path.join(tmp, self.datasetid,"{did}*images*zip".format(did=self.datasetid)))
+        globstmt = os.path.join(tmp, self.datasetid,"{did}*images*zip".format(did=self.datasetid))
+        cands = glob.glob(globstmt)
         if not cands:
+            print("E nothing found at",globstmt)
             return []
 
         datasetdir = os.path.join(tmp, self.datasetid)
@@ -179,6 +184,7 @@ class dataset():
                 print('unable to open {0} with tifffile due to {1}'.format(fn, ex))
 
         return value
+
 
 class ds_006(dataset):
 
