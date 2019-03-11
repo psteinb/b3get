@@ -9,6 +9,7 @@ Why does this file exist, and why __main__? For more info, read:
 - https://docs.python.org/3/using/cmdline.html#cmdoption-m
 """
 from b3get.cli import main
+import sys
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)
