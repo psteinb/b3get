@@ -1,7 +1,7 @@
 import tempfile
 import os
 import re
-
+import requests
 
 def tmp_location():
     """ return a folder under /tmp or similar,
@@ -23,3 +23,16 @@ def filter_files(alist, rex):
     compiled = re.compile(rex)
     srcs = [item for item in alist if compiled.search(item)]
     return srcs
+
+
+def size_of_content(url):
+    """ given an URL, return the number of bytes stored in the header attribute content-length """
+    r = requests.get(url)
+    value = 0
+    if not r.ok:
+        return value
+
+    r = requests.head(url)
+    assert "content-length" in r.headers.keys()
+    value = int(r.headers["content-length"])
+    return value

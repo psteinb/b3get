@@ -2,7 +2,7 @@ import os
 import shutil
 import requests
 from bs4 import BeautifulSoup
-from b3get.utils import tmp_location
+from b3get.utils import tmp_location, size_of_content
 from io import BytesIO
 
 main_url = "https://data.broadinstitute.org/bbbc/image_sets.html"
@@ -58,3 +58,11 @@ def test_download_ds006_to_tmp():
     assert os.stat(dstf).st_size > 0
     print(dstf)
     shutil.rmtree(dst)
+
+
+def test_size_of_content():
+    nbytes = size_of_content('https://data.broadinstitute.org/bbbc/BBBC006/BBBC006_v1_labels.zipa')
+    assert nbytes == 0
+    nbytes = size_of_content('https://data.broadinstitute.org/bbbc/BBBC006/BBBC006_v1_labels.zip')
+    assert nbytes > 0
+    assert nbytes == 10099211
