@@ -1,7 +1,11 @@
 import os
 import requests
+import shutil
+import zipfile
+import glob
+
 from bs4 import BeautifulSoup
-from b3get.utils import filter_files
+from b3get.utils import filter_files, tmp_location
 from b3get.datasets import dataset, ds_006, ds_008, ds_027
 import pytest
 
@@ -77,9 +81,88 @@ def test_008_pull_single():
     ds8 = ds_008()
     imgs = ds8.list_images()
     assert len(imgs) > 0
-    few = filter_files(imgs, '.*\.zip')
+    few = filter_files(imgs, '.*.zip')
     assert len(few) == 1
-    downed = ds8.pull_images('.*\.zip')
+    downed = ds8.pull_images('.*.zip')
     assert downed
     assert len(downed) > 0
     assert os.path.exists(downed[0])
+    shutil.rmtree(tmp_location())
+
+
+def test_008_list_gt():
+    ds8 = ds_008()
+    imgs = ds8.list_gt()
+    assert len(imgs) > 0
+    assert len(imgs) == 1
+    assert "BBBC008_v1_foreground.zip" in imgs
+    urls = ds8.list_gt(True)
+    assert len(urls) > 0
+    r = requests.head(urls[0])
+    assert r.headers
+    assert "content-length" in r.headers.keys()
+    flength = int(r.headers["content-length"])
+    assert flength > 0
+    assert flength == 484995
+
+
+def test_008_pull_gt():
+    ds8 = ds_008()
+    imgs = ds8.pull_gt()
+    assert len(imgs) > 0
+    assert len(imgs) == 1
+    assert "BBBC008_v1_foreground.zip" in [os.path.split(item)[-1] for item in imgs]
+    shutil.rmtree(tmp_location())
+
+
+def test_008_extract_gt_manual():
+    ds8 = ds_008()
+    imgs = ds8.pull_gt()
+    assert len(imgs) > 0
+    assert len(imgs) == 1
+    assert "BBBC008_v1_foreground.zip" in [os.path.split(item)[-1] for item in imgs]
+    with zipfile.ZipFile(imgs[0], 'r') as zf:
+        print('extracting ',imgs[0])
+        zf.extractall(os.path.split(imgs[0])[0])
+        zf.close()
+    path = os.path.split(imgs[0])[0]
+    xpath = os.path.join(path, "human_ht29_colon_cancer_2_foreground")
+    assert os.path.exists(xpath)
+    assert os.path.isdir(xpath)
+    extracted = glob.glob(os.path.join(xpath, "*.tif"))
+    assert len(extracted) > 0
+    assert len(extracted) == 24  # channel 2 is not contained
+    shutil.rmtree(tmp_location())
+
+
+def test_008_extract_gt():
+    ds8 = ds_008()
+    imgs = ds8.pull_gt()
+    assert len(imgs) > 0
+    assert len(imgs) == 1
+    xtracted = ds8.extract_gt()
+    assert xtracted
+    assert len(xtracted) > 0
+    assert len(xtracted) == 24
+    shutil.rmtree(tmp_location())
+
+def test_008_images_to_numpy():
+    ds8 = ds_008()
+    imgs = ds8.pull_images()
+    assert len(imgs) > 0
+    assert len(imgs) == 1
+    xtracted = ds8.extract_images()
+    nplist = ds8.to_numpy(xtracted)
+    assert nplist
+    assert len(nplist) > 0
+    assert len(nplist) == 24
+    shutil.rmtree(tmp_location())
+
+
+
+def test_006_list_gt():
+    ds6 = ds_006()
+    imgs = ds6.list_gt()
+    assert len(imgs) > 0
+    assert len(imgs) == 1
+    assert "BBBC006_v1_labels.zip" in imgs
