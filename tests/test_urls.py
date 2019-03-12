@@ -5,7 +5,7 @@ import shutil
 import requests
 import six
 from bs4 import BeautifulSoup
-from b3get.utils import tmp_location, size_of_content, download_file
+from b3get.utils import tmp_location, size_of_content, serial_download_file
 from io import BytesIO
 
 main_url = "https://data.broadinstitute.org/bbbc/image_sets.html"
@@ -89,7 +89,7 @@ def test_size_of_content():
 
 def test_download_file():
     tmpdir = tmp_location()
-    fpath = download_file('https://data.broadinstitute.org/bbbc/BBBC008/BBBC008_v1_foreground.zip', tmpdir)
+    fpath = serial_download_file('https://data.broadinstitute.org/bbbc/BBBC008/BBBC008_v1_foreground.zip', tmpdir)
     assert fpath
     assert os.path.isfile(fpath)
     assert os.stat(fpath).st_size > 0

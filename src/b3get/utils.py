@@ -41,7 +41,7 @@ def size_of_content(url):
     return value
 
 
-def download_file(url, dstfolder, chunk_bytes=1024*1024):
+def serial_download_file(url, dstfolder, chunk_bytes=1024*1024, npos=None):
     """ download file from <url> into folder <dstfolder>
     returns the full path of the successfully downloaded file
     """
@@ -63,9 +63,20 @@ def download_file(url, dstfolder, chunk_bytes=1024*1024):
             fo.write(r.content)
         else:
             total_length = int(total_length)
-            pbar = tqdm.tqdm(total=total_length, unit='B', unit_scale=True)
+            nbytes = 0
+            pbar = None
+            if not npos:
+                pbar = tqdm.tqdm(total=total_length, unit='B', unit_scale=True)
+            else:
+                pbar = tqdm.tqdm(total=total_length, unit='B', unit_scale=True, position=npos)
+
             for data in r.iter_content(chunk_size=chunk_bytes):
                 fo.write(data)
                 pbar.update(len(data))
+                nbytes += len(data)
 
     return dstf
+
+
+def wrap_serial_download_file(args):
+    return serial_download_file(*args)

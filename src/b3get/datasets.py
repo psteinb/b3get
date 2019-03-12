@@ -8,7 +8,9 @@ import tifffile
 import six
 
 from bs4 import BeautifulSoup
-from b3get.utils import tmp_location, filter_files, size_of_content, download_file
+from b3get.utils import tmp_location, filter_files, size_of_content, wrap_serial_download_file
+from tqdm import trange, tqdm
+from multiprocessing import Pool, freeze_support, RLock, cpu_count
 
 
 class dataset():
@@ -28,6 +30,7 @@ class dataset():
 
         self.baseurl = baseurl
         self.datasetid = baseurl.rstrip('/').split('/')[-1]
+        self.tmp_location = os.path.join(tmp_location(), self.datasetid)
 
     def title(self):
         """ retrieve the title of the dataset """
@@ -61,8 +64,13 @@ class dataset():
                 values.append(url)
         return values
 
-    def pull_files(self, filelist, dstdir = tmp_location(), rex=""):
-        """ given a regular expression <rex>, download the files matching it from the dataset site """
+    def pull_files(self, filelist, dstdir=None, rex="", nprocs=1):
+        """ given a regular expression <rex>, download the files matching it from the dataset site
+        filelist: a list of file names (no paths)
+        dstdir  : destination folder where to download files to
+        rex     : filter <filelist> for this regex string
+        nprocs  : perform download with this many processors (nprocs=-1 means all CPUs)
+        """
 
         imgs = filter_files(filelist, rex) if rex else filelist
         done = []
@@ -70,38 +78,57 @@ class dataset():
             print("no images found matching {}".format(rex))
             return done
 
-        tmp = dstdir
-        dst = os.path.join(tmp, self.datasetid)
-        if not os.path.exists(dst):
-            os.makedirs(dst)
+        if not dstdir:
+            dstdir = self.tmp_location
+        if not os.path.exists(dstdir):
+            print("creating {}".format(dstdir))
+            os.makedirs(dstdir)
+
+        fullurls = []
 
         for zurl in imgs:
             url = "/".join([self.baseurl, zurl]) if not self.baseurl in zurl else zurl
             exp_size = size_of_content(url)
             fname = os.path.split(zurl)[-1]
-            dstf = os.path.join(dst, fname)
+            dstf = os.path.join(dstdir, fname)
             if os.path.exists(dstf) and os.path.isfile(dstf) and os.stat(dstf).st_size == exp_size:
-                print('{0} already exists in {1} with the correct size {2} kB, skipping it'.format(fname, dst, exp_size/(1024.*1024.)))
+                print('{0} already exists in {1} with the correct size {2} kB, skipping it'.format(fname, dstdir, exp_size/(1024.*1024.)))
                 done.append(dstf)
                 continue
+            fullurls.append(url)
 
-            fpath = download_file(url, dst)
+        nprocs = cpu_count() if nprocs < 0 else nprocs
+        freeze_support()  # for Windows support
+        p = Pool(nprocs,
+                 # again, for Windows support
+                 initializer=tqdm.set_lock, initargs=(RLock(),))
 
+        dstfolders = [dstdir]*len(fullurls)
+        cbytes = [1024*1024]*len(fullurls)
+        procids = [item % nprocs for item in range(len(fullurls))]
+
+        zipped_args = zip(fullurls, dstfolders, cbytes, procids)
+        dpaths = p.map(wrap_serial_download_file, zipped_args)
+
+        for i in range(len(fullurls)):
+            fpath = dpaths[i]
+            url = fullurls[i]
+            exp_size = size_of_content(url)
             if os.path.isfile(fpath) and os.stat(fpath).st_size == exp_size:
-                print("downloaded {0} to {1} ({2:.4} MB)".format(url, dstf, exp_size/(1024.*1024.*1024.)))
-                done.append(dstf)
+                print("downloaded {0} to {1} ({2:.4} MB)".format(url, fpath, exp_size/(1024.*1024.*1024.)))
+                done.append(fpath)
             else:
-                print("download of {0} to {1} failed ({2} != {3} B)".format(url, dstf, exp_size, os.stat(dstf).st_size))
+                print("download of {0} to {1} failed ({2} != {3} B)".format(url, fpath, exp_size, os.stat(fpath).st_size))
 
         return done
 
     def pull_images(self, rex=""):
         """ given a regular expression <rex>, download the image files matching it from the dataset site """
-        return self.pull_files(self.list_images(), rex)
+        return self.pull_files(self.list_images(), rex=rex)
 
     def pull_gt(self, rex=""):
         """ given a regular expression <rex>, download the ground truth files matching it from the dataset site """
-        return self.pull_files(self.list_gt(), rex)
+        return self.pull_files(self.list_gt(), rex=rex)
 
     def extract_files(self, filelist, dstdir):
         """ unpack each file in <filelist> to folder <dstdir> """
@@ -125,35 +152,41 @@ class dataset():
 
         return value
 
-    def extract_images(self):
-        """ check tmp_location for downloaded image zip files, if anything is found, extract them """
+    def extract_images(self, folder=None):
+        """ check folder for downloaded image zip files, if anything is found, extract them """
 
-        tmp = tmp_location()
-        globstmt = os.path.join(tmp, self.datasetid, "{did}*images*zip".format(did=self.datasetid))
+        if not folder:
+            folder = self.tmp_location
+        globstmt = os.path.join(folder, "{did}*images*zip".format(did=self.datasetid))
         cands = glob.glob(globstmt)
         if not cands:
             print("E nothing found at", globstmt)
             return []
 
-        datasetdir = os.path.join(tmp, self.datasetid)
+        datasetdir = os.path.join(folder, self.datasetid)
 
         if not os.path.exists(datasetdir):
             os.makedirs(datasetdir)
 
         return self.extract_files(cands, datasetdir)
 
-    def extract_gt(self):
-        """ given a regular expression <rex>, download the ground truth files matching it from the dataset site """
+    def extract_gt(self, folder=None):
+        """ extract the ground truth files found in <folder>, returns list of files extracted """
 
-        tmp = tmp_location()
-        fg = os.path.join(tmp, self.datasetid, "{did}*foreground*zip".format(did=self.datasetid))
+        if not folder:
+            folder = self.tmp_location
+        fg = os.path.join(folder, "{did}*foreground*zip".format(did=self.datasetid))
         cands = glob.glob(fg)
-        labs = os.path.join(tmp, self.datasetid, "{did}*labels*zip".format(did=self.datasetid))
+        if not cands:
+            print('E nothing found for', fg)
+
+        labs = os.path.join(folder, "{did}*labels*zip".format(did=self.datasetid))
         cands.extend(glob.glob(labs))
         if not cands:
+            print('E nothing found for', labs)
             return []
 
-        datasetdir = os.path.join(tmp, self.datasetid)
+        datasetdir = os.path.join(folder, self.datasetid)
 
         if not os.path.exists(datasetdir):
             os.makedirs(datasetdir)

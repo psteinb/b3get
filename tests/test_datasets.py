@@ -130,10 +130,12 @@ def test_008_extract_gt_manual():
 
 
 def test_008_extract_gt():
+    shutil.rmtree(tmp_location())
     ds8 = ds_008()
     imgs = ds8.pull_gt()
     assert len(imgs) > 0
     assert len(imgs) == 1
+    print(imgs)
     xtracted = ds8.extract_gt()
     assert xtracted
     assert len(xtracted) > 0

@@ -62,13 +62,15 @@ The most commonly used git commands are:
                             help='regular expression to limit the labels to download')
         parser.add_argument('-n','--dryrun', action='store_true', default=False,
                             help='don\'t download, just print filenames')
+        parser.add_argument('-j','--nprocs', action='store', default=1,
+                            help='perform <nprocs> many parallel downloads')
         parser.add_argument('datasets', nargs='+', help='dataset(s) to download')
         # now that we're inside a subcommand, ignore the first
         # TWO argvs, ie the command (git) and the subcommand (commit)
         args = parser.parse_args(self.args[2:])
-        print(args)
-        if not hasattr(args,'datasets'):
-            print('no datasets given',args)
+
+        if not hasattr(args, 'datasets'):
+            print('no datasets given', args)
             parser.print_help()
             return
 
@@ -92,7 +94,7 @@ The most commonly used git commands are:
 
             if args.dryrun:
                 for fname in files:
-                    print('pulling',fname)
+                    print('[dryrun] pulling',os.path.join(ds.baseurl,fname))
             else:
                 ds.pull_files(files, args.to)
 
