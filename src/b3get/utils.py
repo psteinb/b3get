@@ -1,7 +1,11 @@
+from __future__ import print_function, with_statement
+
 import tempfile
 import os
 import re
 import requests
+import tqdm
+from io import BytesIO
 
 
 def tmp_location():
@@ -31,12 +35,38 @@ def size_of_content(url):
     r = requests.get(url)
     value = 0
     if not r.ok:
+        print('E url {} does not exist'.format(url))
         return value
 
-    r = requests.head(url)
-    # requests package returns different keys depending on python version
-    # requests==2.21.0: py2: Content-Length; py3: content-length
-    key_cands = [item for item in r.headers.keys() if "content" in item.lower() and "length" in item.lower()]
-    assert len(key_cands) > 0
-    value = int(r.headers[key_cands[0]])
+    value = int(r.headers.get('content-length'))
     return value
+
+
+def download_file(url, dstfolder, chunk_bytes=1024*1024):
+    """ download file from <url> into folder <dstfolder>
+    returns the full path of the successfully downloaded file
+    """
+
+    if not os.path.exists(dstfolder):
+        print('E destination path {} does not exist'.format(dstfolder))
+        return ""
+    r = requests.get(url, stream=True)
+    assert r.ok, "unable to access URL: {}".format(url)
+    _, fname = os.path.split(url)
+    dstf = os.path.join(dstfolder, fname)
+    total_length = int(r.headers.get('content-length'))
+
+    if os.path.isfile(dstf) and os.stat(dstf).st_size == total_length:  # nothing to download
+        return dstf
+    with open(dstf, 'wb') as fo:
+
+        if total_length == 0:  # no content length header
+            fo.write(r.content)
+        else:
+            total_length = int(total_length)
+            pbar = tqdm.tqdm(total=total_length, unit='B', unit_scale=True)
+            for data in r.iter_content(chunk_size=chunk_bytes):
+                fo.write(data)
+                pbar.update(len(data))
+
+    return dstf

@@ -98,12 +98,6 @@ def test_008_list_gt():
     assert "BBBC008_v1_foreground.zip" in imgs
     urls = ds8.list_gt(True)
     assert len(urls) > 0
-    r = requests.head(urls[0])
-    assert r.headers
-    assert "content-length" in r.headers.keys()
-    flength = int(r.headers["content-length"])
-    assert flength > 0
-    assert flength == 484995
 
 
 def test_008_pull_gt():

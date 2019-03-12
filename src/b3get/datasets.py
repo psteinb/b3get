@@ -1,11 +1,14 @@
+from __future__ import absolute_import, print_function, with_statement
+
 import os
 import glob
 import requests
 import zipfile
 import tifffile
+import six
 
 from bs4 import BeautifulSoup
-from b3get.utils import *
+from b3get.utils import tmp_location, filter_files, size_of_content
 from io import BytesIO
 
 
@@ -26,6 +29,7 @@ class dataset():
 
         self.baseurl = baseurl
         self.datasetid = baseurl.rstrip('/').split('/')[-1]
+
 
     def title(self):
         """ retrieve the title of the dataset """
@@ -83,15 +87,9 @@ class dataset():
                 done.append(dstf)
                 continue
 
-            r = requests.get(url)
-            assert r.ok, "unable to access URL: {}".format(url)
-            print('downloading {0} ({1:.4} MB)'.format(zurl,exp_size/(1024.*1024.*1024.)))
-            pulled_bytes = BytesIO(r.content)
+            fpath = download_file(url,dst)
 
-            with open(dstf, 'wb') as fo:
-                fo.write(pulled_bytes.read())
-
-            if os.stat(dstf).st_size == exp_size:
+            if os.path.isfile(fpath) and os.stat(fpath).st_size == exp_size:
                 print("downloaded {0} to {1} ({2:.4} MB)".format(url, dstf, exp_size/(1024.*1024.*1024.)))
                 done.append(dstf)
             else:
@@ -107,8 +105,8 @@ class dataset():
         """ given a regular expression <rex>, download the ground truth files matching it from the dataset site """
         return self.pull_files(self.list_gt(), rex)
 
-
     def extract_files(self, filelist, dstdir):
+        """ unpack each file in <filelist> to folder <dstdir> """
 
         value = []
         if not (os.path.exists(dstdir) and os.path.isdir(dstdir)):
@@ -128,7 +126,6 @@ class dataset():
                 value.extend(glob.glob(os.path.join(entry, "*tif")))
 
         return value
-
 
     def extract_images(self):
         """ check tmp_location for downloaded image zip files, if anything is found, extract them """
@@ -191,7 +188,10 @@ class ds_006(dataset):
     __baseurl = "https://data.broadinstitute.org/bbbc/BBBC006/"
 
     def __init__(self, baseurl=None):
-        super().__init__(baseurl=ds_006.__baseurl if not baseurl else baseurl)
+        if six.PY3:
+            super().__init__(baseurl=ds_006.__baseurl if not baseurl else baseurl)
+        else:
+            dataset.__init__(self,baseurl=ds_006.__baseurl if not baseurl else baseurl)
 
 
 class ds_008(dataset):
@@ -199,7 +199,10 @@ class ds_008(dataset):
     __baseurl = "https://data.broadinstitute.org/bbbc/BBBC008/"
 
     def __init__(self, baseurl=None):
-        super().__init__(baseurl=ds_008.__baseurl if not baseurl else baseurl)
+        if six.PY3:
+            super().__init__(baseurl=ds_008.__baseurl if not baseurl else baseurl)
+        else:
+            dataset.__init__(self, baseurl=ds_008.__baseurl if not baseurl else baseurl)
 
 
 class ds_027(dataset):
@@ -207,4 +210,18 @@ class ds_027(dataset):
     __baseurl = "https://data.broadinstitute.org/bbbc/BBBC027/"
 
     def __init__(self, baseurl=None):
-        super().__init__(baseurl=ds_027.__baseurl if not baseurl else baseurl)
+        if six.PY3:
+            super().__init__(baseurl=ds_027.__baseurl if not baseurl else baseurl)
+        else:
+            dataset.__init__(self, baseurl=ds_027.__baseurl if not baseurl else baseurl)
+
+
+class ds_024(dataset):
+
+    __baseurl = "https://data.broadinstitute.org/bbbc/BBBC024/"
+
+    def __init__(self, baseurl=None):
+        if six.PY3:
+            super().__init__(baseurl=ds_024.__baseurl if not baseurl else baseurl)
+        else:
+            dataset.__init__(self, baseurl=ds_024.__baseurl if not baseurl else baseurl)

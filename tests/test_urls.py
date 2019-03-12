@@ -5,7 +5,7 @@ import shutil
 import requests
 import six
 from bs4 import BeautifulSoup
-from b3get.utils import tmp_location, size_of_content
+from b3get.utils import tmp_location, size_of_content, download_file
 from io import BytesIO
 
 main_url = "https://data.broadinstitute.org/bbbc/image_sets.html"
@@ -74,6 +74,9 @@ def test_manually_size_of_content():
         assert "content-length" in [item.lower() for item in r.headers.keys()]
     else:
         assert "content-length" in r.headers.keys()
+    assert r.headers.get("content-length")
+    assert int(r.headers.get("content-length")) > 0
+    assert int(r.headers.get("content-length")) == 484995
 
 
 def test_size_of_content():
@@ -82,3 +85,13 @@ def test_size_of_content():
     nbytes = size_of_content('https://data.broadinstitute.org/bbbc/BBBC008/BBBC008_v1_foreground.zip')
     assert nbytes > 0
     assert nbytes == 484995
+
+
+def test_download_file():
+    tmpdir = tmp_location()
+    fpath = download_file('https://data.broadinstitute.org/bbbc/BBBC008/BBBC008_v1_foreground.zip', tmpdir)
+    assert fpath
+    assert os.path.isfile(fpath)
+    assert os.stat(fpath).st_size > 0
+    assert os.stat(fpath).st_size == 484995
+    shutil.rmtree(tmpdir)
