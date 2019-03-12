@@ -46,6 +46,9 @@ def test_006_wrong_URL():
         ds = dataset(None)
 
     with pytest.raises(RuntimeError):
+        ds = dataset("https://data.broadinstitute.org/bbbc/BBC027/")
+
+    with pytest.raises(RuntimeError):
         ds = ds_006("https://data.broadinstitute.org/bbbc/BBC027/")
 
 
@@ -68,6 +71,16 @@ def test_006_list_images():
     imgs = ds6.list_images()
     assert len(imgs) > 0
     assert len(imgs) == 34
+    ds6 = ds_006(datasetid=6)
+    imgs = ds6.list_images()
+    assert len(imgs) > 0
+    assert len(imgs) == 34
+
+
+def test_006_list_images_from_datasetid():
+    ds = dataset(datasetid=14)
+    imgs = ds.list_images()
+    assert len(imgs) > 0
 
 
 def test_027_list_images():

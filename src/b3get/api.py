@@ -1,6 +1,7 @@
 import os
 from b3get.datasets import *
 
+
 def to_numpy(dataset_id = None, labels_match='foreground'):
     """ function to download and convert dataset of ID <dataeset_id>
     return value: tuple (size 2)
@@ -10,11 +11,13 @@ def to_numpy(dataset_id = None, labels_match='foreground'):
 
     value = (None, None)
     dsint = int(dataset_id)
+    ds = None
     if not dsint in [6,8,24,27]:
-        print('support for BBBC{0:03} planned, but not available yet'.format(dsint))
-        return value
+        print('support for BBBC{0:03} planned, but not thoroughly tested yet'.format(dsint))
+        ds = eval('dataset(datasetid="BBBC{0:03}")'.format(dsint))
+    else:
+        ds = eval('ds_{0:03}()'.format(dsint))
 
-    ds = eval('ds_{0:03}()'.format(dsint))
     imgs = ds.pull_images()
     ximgs = ds.extract_images()
 

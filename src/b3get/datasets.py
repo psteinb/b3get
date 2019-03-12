@@ -16,14 +16,21 @@ from multiprocessing import Pool, freeze_support, RLock, cpu_count
 class dataset():
     """ base class that offers methods which all deriving classes can override if needed """
 
-    def __init__(self, baseurl=None):
+    def __init__(self, baseurl=None, datasetid=None):
         """
-        constructor of dataset given a baseurl
-        - will throw RuntimeError if no URL is given
+        constructor of dataset given a baseurl or dataasetid (baseurl has precedence)
+        - will throw RuntimeError if neither <baseurl> nor <datasetid> is given
+        - will throw RuntimeError if <datasetid> invalid (greater than 42)
         - will throw RuntimeError if URL <baseurl> is not reachable
         """
         if not baseurl:
-            raise RuntimeError('No URL given to b3get. Nothing todo then.')
+            if not datasetid:
+                raise RuntimeError('No URL or datasetid given to b3get. Nothing todo then.')
+            elif datasetid < 43:
+                baseurl = "https://data.broadinstitute.org/bbbc/BBBC{0:03}/".format(datasetid)
+            else:
+                raise RuntimeError('Dataset id {} given to b3get invalid.'.format(datasetid))
+
         r = requests.get(baseurl)
         if not r.ok:
             raise RuntimeError('No dataset can be reached at {}'.format(baseurl))
@@ -216,43 +223,35 @@ class dataset():
 
 class ds_006(dataset):
 
-    __baseurl = "https://data.broadinstitute.org/bbbc/BBBC006/"
-
-    def __init__(self, baseurl=None):
+    def __init__(self, baseurl=None, datasetid=6):
         if six.PY3:
-            super().__init__(baseurl=ds_006.__baseurl if not baseurl else baseurl)
+            super().__init__(baseurl=baseurl, datasetid=datasetid)
         else:
-            dataset.__init__(self, baseurl=ds_006.__baseurl if not baseurl else baseurl)
+            dataset.__init__(self, baseurl=baseurl, datasetid=datasetid)
 
 
 class ds_008(dataset):
 
-    __baseurl = "https://data.broadinstitute.org/bbbc/BBBC008/"
-
-    def __init__(self, baseurl=None):
+    def __init__(self, baseurl=None, datasetid=8):
         if six.PY3:
-            super().__init__(baseurl=ds_008.__baseurl if not baseurl else baseurl)
+            super().__init__(baseurl=baseurl, datasetid=datasetid)
         else:
-            dataset.__init__(self, baseurl=ds_008.__baseurl if not baseurl else baseurl)
+            dataset.__init__(self, baseurl=baseurl, datasetid=datasetid)
 
 
 class ds_027(dataset):
 
-    __baseurl = "https://data.broadinstitute.org/bbbc/BBBC027/"
-
-    def __init__(self, baseurl=None):
+    def __init__(self, baseurl=None, datasetid=27):
         if six.PY3:
-            super().__init__(baseurl=ds_027.__baseurl if not baseurl else baseurl)
+            super().__init__(baseurl=baseurl, datasetid=datasetid)
         else:
-            dataset.__init__(self, baseurl=ds_027.__baseurl if not baseurl else baseurl)
+            dataset.__init__(self, baseurl=baseurl, datasetid=datasetid)
 
 
 class ds_024(dataset):
 
-    __baseurl = "https://data.broadinstitute.org/bbbc/BBBC024/"
-
-    def __init__(self, baseurl=None):
+    def __init__(self, baseurl=None, datasetid=24):
         if six.PY3:
-            super().__init__(baseurl=ds_024.__baseurl if not baseurl else baseurl)
+            super().__init__(baseurl=baseurl, datasetid=datasetid)
         else:
-            dataset.__init__(self, baseurl=ds_024.__baseurl if not baseurl else baseurl)
+            dataset.__init__(self, baseurl=baseurl, datasetid=datasetid)
