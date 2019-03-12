@@ -67,8 +67,6 @@ def test_manually_size_of_content():
     url = 'https://data.broadinstitute.org/bbbc/BBBC008/BBBC008_v1_foreground.zip'
     r = requests.get(url)
     assert r.ok
-
-    r = requests.head(url)
     assert r.headers
     if six.PY2:
         assert "content-length" in [item.lower() for item in r.headers.keys()]

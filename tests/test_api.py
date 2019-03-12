@@ -1,6 +1,6 @@
 from b3get import to_numpy
 import numpy as np
-import glob
+
 
 def test_available():
     assert dir(to_numpy)
