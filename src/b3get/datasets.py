@@ -12,6 +12,12 @@ from b3get.utils import tmp_location, filter_files, size_of_content, wrap_serial
 from tqdm import trange, tqdm
 from multiprocessing import Pool, freeze_support, RLock, cpu_count
 
+TESTED_DATASETS = {
+    "BBBC006": "Human U2OS cells (out of focus)   ",
+    "BBBC008": "Human HT29 colon-cancer cells     ",
+    "BBBC024": "3D HL60 Cell Line (synthetic data)",
+    "BBBC027": "3D Colon Tissue (synthetic data)  "
+}
 
 class dataset():
     """ base class that offers methods which all deriving classes can override if needed """

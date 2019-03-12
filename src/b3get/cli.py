@@ -125,10 +125,9 @@ The most commonly used commands are:\n'''
 
         av = [6,8,24,27]
         for i in av:
-            try:
-                ds = datasets.dataset(datasetid=i)
-            finally:
-                print("{0:03} {1}".format(i, ds.title()))
+            dsid = "BBBC{0:03}".format(i)
+            if dsid in datasets.TESTED_DATASETS.keys():
+                print("BBBC{0:03} {1}".format(i, datasets.TESTED_DATASETS[dsid]))
 
         self.exit_code = 0
 
