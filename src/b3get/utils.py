@@ -5,7 +5,6 @@ import os
 import re
 import requests
 import tqdm
-from io import BytesIO
 
 
 def tmp_location():

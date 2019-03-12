@@ -12,4 +12,5 @@ from b3get.cli import main
 import sys
 
 if __name__ == "__main__":
-    main(sys.argv)
+    exit_code = main(sys.argv)
+    sys.exit(exit_code)

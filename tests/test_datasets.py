@@ -6,7 +6,7 @@ import glob
 
 from bs4 import BeautifulSoup
 from b3get.utils import filter_files, tmp_location
-from b3get.datasets import dataset, ds_006, ds_008, ds_027
+from b3get.datasets import dataset, ds_006, ds_008, ds_024, ds_027
 import pytest
 
 # manual tests for exploration
@@ -164,3 +164,11 @@ def test_006_list_gt():
     assert len(imgs) > 0
     assert len(imgs) == 1
     assert "BBBC006_v1_labels.zip" in imgs
+
+
+def test_024_list():
+    ds = ds_024()
+    imgs = ds.list_images()
+    assert len(imgs) > 0
+    gt = ds.list_gt()
+    assert len(gt) > 0

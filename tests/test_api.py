@@ -15,7 +15,8 @@ def test_wrong_ds():
 
 
 def test_008():
-    tgt = os.path.join(tmp_location(),'BBBC008')
+    tgt = os.path.join(tmp_location(), 'BBBC008')
+
     if os.path.exists(tgt):
         shutil.rmtree(tgt)
 

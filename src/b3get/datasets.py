@@ -8,8 +8,7 @@ import tifffile
 import six
 
 from bs4 import BeautifulSoup
-from b3get.utils import tmp_location, filter_files, size_of_content
-from io import BytesIO
+from b3get.utils import tmp_location, filter_files, size_of_content, download_file
 
 
 class dataset():
@@ -29,7 +28,6 @@ class dataset():
 
         self.baseurl = baseurl
         self.datasetid = baseurl.rstrip('/').split('/')[-1]
-
 
     def title(self):
         """ retrieve the title of the dataset """
@@ -63,22 +61,22 @@ class dataset():
                 values.append(url)
         return values
 
-    def pull_files(self, filelist, rex=""):
+    def pull_files(self, filelist, dstdir = tmp_location(), rex=""):
         """ given a regular expression <rex>, download the files matching it from the dataset site """
 
-        imgs = filter_files(filelist, rex)
+        imgs = filter_files(filelist, rex) if rex else filelist
         done = []
         if len(imgs) == 0:
             print("no images found matching {}".format(rex))
             return done
 
-        tmp = tmp_location()
-        dst = os.path.join(tmp,self.datasetid)
+        tmp = dstdir
+        dst = os.path.join(tmp, self.datasetid)
         if not os.path.exists(dst):
             os.makedirs(dst)
 
         for zurl in imgs:
-            url = "/".join([self.baseurl, zurl])
+            url = "/".join([self.baseurl, zurl]) if not self.baseurl in zurl else zurl
             exp_size = size_of_content(url)
             fname = os.path.split(zurl)[-1]
             dstf = os.path.join(dst, fname)
@@ -87,13 +85,13 @@ class dataset():
                 done.append(dstf)
                 continue
 
-            fpath = download_file(url,dst)
+            fpath = download_file(url, dst)
 
             if os.path.isfile(fpath) and os.stat(fpath).st_size == exp_size:
                 print("downloaded {0} to {1} ({2:.4} MB)".format(url, dstf, exp_size/(1024.*1024.*1024.)))
                 done.append(dstf)
             else:
-                print("download of {0} to {1} failed ({2} != {3} B)".format(url, dstf, exp_size, os.stat(dstf).st_size ))
+                print("download of {0} to {1} failed ({2} != {3} B)".format(url, dstf, exp_size, os.stat(dstf).st_size))
 
         return done
 
@@ -131,10 +129,10 @@ class dataset():
         """ check tmp_location for downloaded image zip files, if anything is found, extract them """
 
         tmp = tmp_location()
-        globstmt = os.path.join(tmp, self.datasetid,"{did}*images*zip".format(did=self.datasetid))
+        globstmt = os.path.join(tmp, self.datasetid, "{did}*images*zip".format(did=self.datasetid))
         cands = glob.glob(globstmt)
         if not cands:
-            print("E nothing found at",globstmt)
+            print("E nothing found at", globstmt)
             return []
 
         datasetdir = os.path.join(tmp, self.datasetid)
@@ -148,9 +146,9 @@ class dataset():
         """ given a regular expression <rex>, download the ground truth files matching it from the dataset site """
 
         tmp = tmp_location()
-        fg = os.path.join(tmp, self.datasetid,"{did}*foreground*zip".format(did=self.datasetid))
+        fg = os.path.join(tmp, self.datasetid, "{did}*foreground*zip".format(did=self.datasetid))
         cands = glob.glob(fg)
-        labs = os.path.join(tmp, self.datasetid,"{did}*labels*zip".format(did=self.datasetid))
+        labs = os.path.join(tmp, self.datasetid, "{did}*labels*zip".format(did=self.datasetid))
         cands.extend(glob.glob(labs))
         if not cands:
             return []
@@ -191,7 +189,7 @@ class ds_006(dataset):
         if six.PY3:
             super().__init__(baseurl=ds_006.__baseurl if not baseurl else baseurl)
         else:
-            dataset.__init__(self,baseurl=ds_006.__baseurl if not baseurl else baseurl)
+            dataset.__init__(self, baseurl=ds_006.__baseurl if not baseurl else baseurl)
 
 
 class ds_008(dataset):
