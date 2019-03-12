@@ -97,6 +97,7 @@ The most commonly used commands are:\n'''
             else:
                 ds = eval('datasets.dataset(baseurl="https://data.broadinstitute.org/bbbc/BBBC{0:03}/")'.format(dsid))
 
+            print('fetching image information for dataset',dsid)
             files = ds.list_images()
             files = filter_files(files, args.rex)
 
@@ -107,7 +108,7 @@ The most commonly used commands are:\n'''
                 for fname in files:
                     print('[dryrun] pulling',os.path.join(ds.baseurl,fname))
             else:
-                ds.pull_files(files, args.to)
+                ds.pull_files(files, dstdir=args.to, nprocs=int(args.nprocs))
 
         self.exit_code = 0
 

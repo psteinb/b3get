@@ -37,25 +37,26 @@ class dataset():
             else:
                 raise RuntimeError('Dataset id {} given to b3get invalid.'.format(datasetid))
 
-        r = requests.get(baseurl)
+        r = requests.get(baseurl,timeout=2.)
         if not r.ok:
             raise RuntimeError('No dataset can be reached at {}'.format(baseurl))
 
         self.baseurl = baseurl
         self.datasetid = baseurl.rstrip('/').split('/')[-1]
         self.tmp_location = os.path.join(tmp_location(), self.datasetid)
+        self.baseurl_request = r
 
     def title(self):
         """ retrieve the title of the dataset """
-        r = requests.get(self.baseurl)
-        hdoc = BeautifulSoup(r.text, 'html.parser')
+
+        hdoc = BeautifulSoup(self.baseurl_request.text, 'html.parser')
         return hdoc.title.string
 
     def list_images(self, absolute_url=False):
         """ retrieve the list of images for this dataset """
         values = []
-        r = requests.get(self.baseurl)
-        hdoc = BeautifulSoup(r.text, 'html.parser')
+
+        hdoc = BeautifulSoup(self.baseurl_request.text, 'html.parser')
         all_links = hdoc.find_all('a')
         for anc in all_links:
             href = anc.get('href')
@@ -67,8 +68,8 @@ class dataset():
     def list_gt(self, absolute_url=False):
         """ retrieve the list of images for this dataset """
         values = []
-        r = requests.get(self.baseurl)
-        hdoc = BeautifulSoup(r.text, 'html.parser')
+
+        hdoc = BeautifulSoup(self.baseurl_request.text, 'html.parser')
         all_links = hdoc.find_all('a')
         for anc in all_links:
             href = anc.get('href')
@@ -96,12 +97,14 @@ class dataset():
         if not os.path.exists(dstdir):
             print("creating {}".format(dstdir))
             os.makedirs(dstdir)
+        print('received {} files'.format(len(filelist)))
 
         fullurls = []
-
+        total_bytes = 0
         for zurl in imgs:
-            url = "/".join([self.baseurl, zurl]) if not self.baseurl in zurl else zurl
+            url = "/".join([self.baseurl.rstrip('/'), zurl]) if not self.baseurl in zurl else zurl
             exp_size = size_of_content(url)
+            total_bytes += exp_size
             fname = os.path.split(zurl)[-1]
             dstf = os.path.join(dstdir, fname)
             if os.path.exists(dstf) and os.path.isfile(dstf) and os.stat(dstf).st_size == exp_size:
@@ -112,16 +115,20 @@ class dataset():
 
         nprocs = cpu_count() if nprocs < 0 else nprocs
         freeze_support()  # for Windows support
-        p = Pool(nprocs,
-                 # again, for Windows support
-                 initializer=tqdm.set_lock, initargs=(RLock(),))
 
         dstfolders = [dstdir]*len(fullurls)
         cbytes = [1024*1024]*len(fullurls)
         procids = [item % nprocs for item in range(len(fullurls))]
-
+        if len(fullurls)>0:
+            print('downloading {0} files with {1} threads of {2:04.04} MB in total'.format(len(fullurls),
+                                                                                           nprocs,
+                                                                                           total_bytes/(1024.*1024.*1024.)))
         zipped_args = zip(fullurls, dstfolders, cbytes, procids)
+        p = Pool(nprocs,
+                 # again, for Windows support
+                 initializer=tqdm.set_lock, initargs=(RLock(),))
         dpaths = p.map(wrap_serial_download_file, zipped_args)
+        print()
 
         for i in range(len(fullurls)):
             fpath = dpaths[i]

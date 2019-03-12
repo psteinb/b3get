@@ -31,7 +31,12 @@ def filter_files(alist, rex):
 
 def size_of_content(url):
     """ given an URL, return the number of bytes stored in the header attribute content-length """
-    r = requests.get(url)
+    try:
+        r = requests.get(url, timeout=2)
+    except requests.exceptions.Timeout as texc:
+        print('timed out on',url)
+        return 0
+
     value = 0
     if not r.ok:
         print('E url {} does not exist'.format(url))
@@ -49,7 +54,7 @@ def serial_download_file(url, dstfolder, chunk_bytes=1024*1024, npos=None):
     if not os.path.exists(dstfolder):
         print('E destination path {} does not exist'.format(dstfolder))
         return ""
-    r = requests.get(url, stream=True)
+    r = requests.get(url, stream=True, timeout=2)
     assert r.ok, "unable to access URL: {}".format(url)
     _, fname = os.path.split(url)
     dstf = os.path.join(dstfolder, fname)
