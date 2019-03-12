@@ -9,7 +9,7 @@ import six
 
 from bs4 import BeautifulSoup
 from b3get.utils import tmp_location, filter_files, size_of_content, wrap_serial_download_file
-from tqdm import trange, tqdm
+from tqdm import tqdm
 from multiprocessing import Pool, freeze_support, RLock, cpu_count
 
 TESTED_DATASETS = {
@@ -18,6 +18,7 @@ TESTED_DATASETS = {
     "BBBC024": "3D HL60 Cell Line (synthetic data)",
     "BBBC027": "3D Colon Tissue (synthetic data)  "
 }
+
 
 class dataset():
     """ base class that offers methods which all deriving classes can override if needed """
@@ -30,14 +31,14 @@ class dataset():
         - will throw RuntimeError if URL <baseurl> is not reachable
         """
         if not baseurl:
-            if datasetid == None:
+            if datasetid is None:
                 raise RuntimeError('No URL {} or datasetid {} given to b3get. Nothing todo then.'.format(baseurl, datasetid))
             elif datasetid < 43:
                 baseurl = "https://data.broadinstitute.org/bbbc/BBBC{0:03}/".format(datasetid)
             else:
                 raise RuntimeError('Dataset id {} given to b3get invalid.'.format(datasetid))
 
-        r = requests.get(baseurl,timeout=2.)
+        r = requests.get(baseurl, timeout=2.)
         if not r.ok:
             raise RuntimeError('No dataset can be reached at {}'.format(baseurl))
 
@@ -102,13 +103,15 @@ class dataset():
         fullurls = []
         total_bytes = 0
         for zurl in imgs:
-            url = "/".join([self.baseurl.rstrip('/'), zurl]) if not self.baseurl in zurl else zurl
+            url = "/".join([self.baseurl.rstrip('/'), zurl]) if self.baseurl not in zurl else zurl
             exp_size = size_of_content(url)
             total_bytes += exp_size
             fname = os.path.split(zurl)[-1]
             dstf = os.path.join(dstdir, fname)
             if os.path.exists(dstf) and os.path.isfile(dstf) and os.stat(dstf).st_size == exp_size:
-                print('{0} already exists in {1} with the correct size {2:04.4} kB, skipping it'.format(fname, dstdir, exp_size/(1024.*1024.)))
+                print('{0} already exists in {1} with the correct size {2:04.4} kB, skipping it'.format(fname,
+                                                                                                        dstdir,
+                                                                                                        exp_size/(1024.*1024.)))
                 done.append(dstf)
                 continue
             fullurls.append(url)
@@ -119,7 +122,7 @@ class dataset():
         dstfolders = [dstdir]*len(fullurls)
         cbytes = [1024*1024]*len(fullurls)
         procids = [item % nprocs for item in range(len(fullurls))]
-        if len(fullurls)>0:
+        if len(fullurls) > 0:
             print('downloading {0} files with {1} threads of {2:04.04} MB in total'.format(len(fullurls),
                                                                                            nprocs,
                                                                                            total_bytes/(1024.*1024.*1024.)))
@@ -167,7 +170,7 @@ class dataset():
                 zf.close()
 
             for entry in xpaths:
-                loc = os.path.join(dstdir,entry)
+                loc = os.path.join(dstdir, entry)
                 basedir, fname = os.path.split(loc)
                 if os.path.isfile(loc) and ".tif" in fname and "__MACOSX" not in basedir:
                     value.append(loc)

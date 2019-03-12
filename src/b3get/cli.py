@@ -40,8 +40,8 @@ The most commonly used commands are:\n'''
                 continue
 
             dstr = inspect.getdoc(getattr(self, k))
-            if dstr and len(dstr)>0:
-                usage_str += "\t{0}\t{1}\n".format(k,dstr)
+            if dstr and len(dstr) > 0:
+                usage_str += "\t{0}\t{1}\n".format(k, dstr)
 
         self.top_parser = argparse.ArgumentParser(
             description='',
@@ -52,7 +52,7 @@ The most commonly used commands are:\n'''
         # exclude the rest of the args too, or validation will fail
         args = self.top_parser.parse_args(args[1:2])
         if not hasattr(self, args.command):
-            print('Unrecognized command',args[1:2])
+            print('Unrecognized command', args[1:2])
             self.top_parser.print_help()
 
         # use dispatch pattern to invoke method with same name
@@ -63,7 +63,7 @@ The most commonly used commands are:\n'''
         parser = argparse.ArgumentParser(
             description='download dataset')
         # prefixing the argument with -- means it's optional
-        parser.add_argument('-o','--to', action='store', default='.', type=str,
+        parser.add_argument('-o', '--to', action='store', default='.', type=str,
                             help='directory where to store the downloaded dataset (error if it doesn\'t exist')
         parser.add_argument('--rex', action='store', type=str, default='',
                             help='regular expression to limit the images to download')
@@ -71,9 +71,9 @@ The most commonly used commands are:\n'''
                             help='try an unconfigured dataset')
         parser.add_argument('--lrex', action='store', type=str,
                             help='regular expression to limit the labels to download')
-        parser.add_argument('-n','--dryrun', action='store_true', default=False,
+        parser.add_argument('-n', '--dryrun', action='store_true', default=False,
                             help='don\'t download, just print filenames')
-        parser.add_argument('-j','--nprocs', action='store', default=1,
+        parser.add_argument('-j', '--nprocs', action='store', default=1,
                             help='perform <nprocs> many parallel downloads')
         parser.add_argument('datasets', nargs='+', help='dataset(s) to download')
         # now that we're inside a subcommand, ignore the first
@@ -97,7 +97,7 @@ The most commonly used commands are:\n'''
             else:
                 ds = eval('datasets.dataset(baseurl="https://data.broadinstitute.org/bbbc/BBBC{0:03}/")'.format(dsid))
 
-            print('fetching image information for dataset',dsid)
+            print('fetching image information for dataset', dsid)
             files = ds.list_images()
             files = filter_files(files, args.rex)
 
@@ -106,7 +106,7 @@ The most commonly used commands are:\n'''
 
             if args.dryrun:
                 for fname in files:
-                    print('[dryrun] pulling',os.path.join(ds.baseurl,fname))
+                    print('[dryrun] pulling', os.path.join(ds.baseurl, fname))
             else:
                 ds.pull_files(files, dstdir=args.to, nprocs=int(args.nprocs))
 
@@ -121,10 +121,13 @@ The most commonly used commands are:\n'''
         parser = argparse.ArgumentParser(
             description='list tested available datasets (anything else is experimental)')
         # NOT prefixing the argument with -- means it's not optional
-        #parser.add_argument('repository')
+        # parser.add_argument('repository')
         args = parser.parse_args(self.args[2:])
+        if 'help' in args:
+            parser.print_help()
+            return
 
-        av = [6,8,24,27]
+        av = [6, 8, 24, 27]
         for i in av:
             dsid = "BBBC{0:03}".format(i)
             if dsid in datasets.TESTED_DATASETS.keys():

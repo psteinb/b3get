@@ -22,7 +22,7 @@ def tmp_location():
 
 def filter_files(alist, rex):
     """ given a list (of strings), filter out items that match the regular express rex """
-    if not isinstance(rex,str) or len(rex) == 0:
+    if not isinstance(rex, str) or len(rex) == 0:
         return alist
     compiled = re.compile(rex)
     srcs = [item for item in alist if compiled.search(item)]
@@ -34,7 +34,7 @@ def size_of_content(url):
     try:
         r = requests.head(url, timeout=2)
     except requests.exceptions.Timeout as texc:
-        print('timed out on',url,texc)
+        print('timed out on', url, texc)
         return 0
     except Exception as ex:
         raise ex
