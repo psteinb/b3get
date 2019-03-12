@@ -26,7 +26,7 @@ project = 'b3get'
 year = '2019'
 author = 'Peter Steinbach'
 copyright = '{0}, {1}'.format(year, author)
-version = release = 'version = release = '0.2.0''
+version = release = 'version = release = '0.2.1''
 
 pygments_style = 'trac'
 templates_path = ['.']
