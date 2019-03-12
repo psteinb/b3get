@@ -24,8 +24,8 @@ class dataset():
         - will throw RuntimeError if URL <baseurl> is not reachable
         """
         if not baseurl:
-            if not datasetid:
-                raise RuntimeError('No URL or datasetid given to b3get. Nothing todo then.')
+            if datasetid == None:
+                raise RuntimeError('No URL {} or datasetid {} given to b3get. Nothing todo then.'.format(baseurl, datasetid))
             elif datasetid < 43:
                 baseurl = "https://data.broadinstitute.org/bbbc/BBBC{0:03}/".format(datasetid)
             else:

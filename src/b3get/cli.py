@@ -16,6 +16,7 @@ Why does this file exist, and why not put this in __main__?
 """
 from __future__ import print_function, with_statement
 import argparse
+import inspect
 import os
 import sys
 import traceback
@@ -28,14 +29,23 @@ class b3get_cli(object):
     def __init__(self, args=sys.argv):
         self.exit_code = 1
         self.args = args
-        self.top_parser = argparse.ArgumentParser(
-            description='Pretends to be git',
-            usage='''b3get <command> [<args>]
+        usage_str = '''b3get <command> [<args>]
 
-The most commonly used git commands are:
-   pull       download dataset
-   list       list available datasets
-''')
+The most commonly used commands are:\n'''
+
+        for k in dir(self):
+            if k.startswith('__'):
+                continue
+            if not callable(getattr(self, k)):
+                continue
+
+            dstr = inspect.getdoc(getattr(self, k))
+            if dstr and len(dstr)>0:
+                usage_str += "\t{0}\t{1}\n".format(k,dstr)
+
+        self.top_parser = argparse.ArgumentParser(
+            description='',
+            usage=usage_str)
         self.top_parser.add_argument('command', help='Subcommand to run')
 
         # parse_args defaults to [1:] for args, but you need to
@@ -49,6 +59,7 @@ The most commonly used git commands are:
         getattr(self, args.command)()
 
     def pull(self):
+        """ download dataset """
         parser = argparse.ArgumentParser(
             description='download dataset')
         # prefixing the argument with -- means it's optional
@@ -101,32 +112,28 @@ The most commonly used git commands are:
         self.exit_code = 0
 
     def help(self):
+        """show help message"""
         self.top_parser.print_help()
 
     def list(self):
+        """list available datasets"""
         parser = argparse.ArgumentParser(
-            description='list available datasets')
+            description='list tested available datasets (anything else is experimental)')
         # NOT prefixing the argument with -- means it's not optional
         #parser.add_argument('repository')
         args = parser.parse_args(self.args[2:])
 
         av = [6,8,24,27]
+        for i in av:
+            try:
+                ds = datasets.dataset(datasetid=i)
+            finally:
+                print("{0:03} {1}".format(i, ds.title()))
 
-        print("\n".join([ "{0:03}".format(item) for item in av ]))
-        self.exit_code = 0
-
-    def list(self):
-        parser = argparse.ArgumentParser(
-            description='list available datasets')
-        # NOT prefixing the argument with -- means it's not optional
-        #parser.add_argument('repository')
-        args = parser.parse_args(self.args[2:])
-        av = [6,8,24,27]
-
-        print("\n".join(["{0:03}".format(item) for item in av]))
         self.exit_code = 0
 
     def show(self):
+        """show files contained in a dataset"""
         parser = argparse.ArgumentParser(
             description='show URLs for given dataset')
         parser.add_argument('datasets', nargs='+', help='dataset(s) to download')
