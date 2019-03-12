@@ -99,7 +99,7 @@ class dataset():
             fname = os.path.split(zurl)[-1]
             dstf = os.path.join(dstdir, fname)
             if os.path.exists(dstf) and os.path.isfile(dstf) and os.stat(dstf).st_size == exp_size:
-                print('{0} already exists in {1} with the correct size {2} kB, skipping it'.format(fname, dstdir, exp_size/(1024.*1024.)))
+                print('{0} already exists in {1} with the correct size {2:04.4} kB, skipping it'.format(fname, dstdir, exp_size/(1024.*1024.)))
                 done.append(dstf)
                 continue
             fullurls.append(url)
@@ -146,16 +146,18 @@ class dataset():
             return value
 
         for fn in filelist:
-            before = set(glob.glob(os.path.join(dstdir, "*")))
+            xpaths = None
             with zipfile.ZipFile(fn, 'r') as zf:
                 print('extracting ', fn)
                 zf.extractall(dstdir)
+                xpaths = zf.namelist()
                 zf.close()
-            after = set(glob.glob(os.path.join(dstdir, "*")))
-            xpaths = after.difference(before)
 
             for entry in xpaths:
-                value.extend(glob.glob(os.path.join(entry, "*tif")))
+                loc = os.path.join(dstdir,entry)
+                basedir, fname = os.path.split(loc)
+                if os.path.isfile(loc) and ".tif" in fname and "__MACOSX" not in basedir:
+                    value.append(loc)
 
         return value
 

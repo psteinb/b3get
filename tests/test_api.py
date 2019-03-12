@@ -1,13 +1,13 @@
 from b3get import to_numpy
 import numpy as np
-
+import glob
 
 def test_available():
     assert dir(to_numpy)
 
 
 def test_wrong_ds():
-    assert to_numpy(9) == (None, None)
+    assert to_numpy(43) == (None, None)
 
 
 def test_008():
