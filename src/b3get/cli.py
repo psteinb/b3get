@@ -21,7 +21,7 @@ import os
 import sys
 import traceback
 from b3get import datasets
-from b3get.utils import filter_files
+from b3get.utils import filter_files, size_of_content
 
 
 class b3get_cli(object):
@@ -138,6 +138,7 @@ The most commonly used commands are:\n'''
             description='show URLs for given dataset')
         parser.add_argument('datasets', nargs='+', help='dataset(s) to download')
         parser.add_argument('-x', '--experimental', default=True, action='store_true', help='try an unconfigured dataset')
+        parser.add_argument('-s', '--add_size', default=False, action='store_true', help='add size in MB of file')
         # now that we're inside a subcommand, ignore the first
         # TWO argvs, ie the command (git) and the subcommand (commit)
         args = parser.parse_args(self.args[2:])
@@ -158,7 +159,13 @@ The most commonly used commands are:\n'''
             files.extend(ds.list_gt())
 
             for fname in files:
-                print(os.path.join(ds.baseurl, fname))
+                url = os.path.join(ds.baseurl, fname)
+                if args.add_size:
+                    size = size_of_content(url)
+                    print("{0:10.04}MB\t{1}".format(size/(1024.*1024.*1024), url))
+                else:
+                    print(url)
+
         self.exit_code = 0
 
 

@@ -65,7 +65,7 @@ def test_download_ds006_to_tmp():
 
 def test_manually_size_of_content():
     url = 'https://data.broadinstitute.org/bbbc/BBBC008/BBBC008_v1_foreground.zip'
-    r = requests.get(url)
+    r = requests.head(url)
     assert r.ok
     assert r.headers
     if six.PY2:

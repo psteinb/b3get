@@ -32,10 +32,12 @@ def filter_files(alist, rex):
 def size_of_content(url):
     """ given an URL, return the number of bytes stored in the header attribute content-length """
     try:
-        r = requests.get(url, timeout=2)
+        r = requests.head(url, timeout=2)
     except requests.exceptions.Timeout as texc:
-        print('timed out on',url)
+        print('timed out on',url,texc)
         return 0
+    except Exception as ex:
+        raise ex
 
     value = 0
     if not r.ok:
