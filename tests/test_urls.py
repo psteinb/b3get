@@ -1,6 +1,7 @@
 import os
 import shutil
 import requests
+import six
 from bs4 import BeautifulSoup
 from b3get.utils import tmp_location, size_of_content
 from io import BytesIO
@@ -37,13 +38,13 @@ def test_check_ds006_title():
 
 
 def test_download_ds006_to_tmp():
-    url = "https://data.broadinstitute.org/bbbc/BBBC006/"
+    url = "https://data.broadinstitute.org/bbbc/BBBC008/"
     r = requests.get(url)
     assert r.ok
 
-    zipurl = 'https://data.broadinstitute.org/bbbc/BBBC006/BBBC006_v1_labels.zip'
+    zipurl = 'https://data.broadinstitute.org/bbbc/BBBC008/BBBC008_v1_foreground.zip'
     tdir = tmp_location()
-    dst = os.path.join(tdir, 'BBBC006')
+    dst = os.path.join(tdir, 'BBBC008')
     if not os.path.isdir(dst):
         os.makedirs(dst)
     r = requests.get(zipurl)
@@ -60,9 +61,22 @@ def test_download_ds006_to_tmp():
     shutil.rmtree(dst)
 
 
+def test_manually_size_of_content():
+    url = 'https://data.broadinstitute.org/bbbc/BBBC008/BBBC008_v1_foreground.zip'
+    r = requests.get(url)
+    assert r.ok
+
+    r = requests.head(url)
+    assert r.headers
+    if six.PY2:
+        assert "content-length" in [item.lower() for item in r.headers.keys()]
+    else:
+        assert "content-length" in r.headers.keys()
+
+
 def test_size_of_content():
-    nbytes = size_of_content('https://data.broadinstitute.org/bbbc/BBBC006/BBBC006_v1_labels.zipa')
+    nbytes = size_of_content('https://data.broadinstitute.org/bbbc/BBBC008/BBBC008_v1_foreground.zipa')
     assert nbytes == 0
-    nbytes = size_of_content('https://data.broadinstitute.org/bbbc/BBBC006/BBBC006_v1_labels.zip')
+    nbytes = size_of_content('https://data.broadinstitute.org/bbbc/BBBC008/BBBC008_v1_foreground.zip')
     assert nbytes > 0
-    assert nbytes == 10099211
+    assert nbytes == 484995
