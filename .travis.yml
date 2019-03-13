@@ -9,9 +9,9 @@ env:
 #    - TOXENV=docs #commenting this out until we have readthedocs and pypi setup
 matrix:
   include:
-    # - python: '2.7'
-    #   env:
-    #     - TOXENV=py27,report,codecov
+    - python: '2.7'
+      env:
+        - TOXENV=py27,report,codecov
     - python: '3.4'
       env:
         - TOXENV=py34,report,codecov
@@ -25,12 +25,12 @@ matrix:
       dist: xenial
       env:
         - TOXENV=py37,report,codecov
-    # - python: 'pypy'
-    #   env:
-    #     - TOXENV=pypy,report,codecov
-    # - python: 'pypy3'
-    #   env:
-    #     - TOXENV=pypy3,report,codecov
+    - python: 'pypy'
+      env:
+        - TOXENV=pypy,report,codecov
+    - python: 'pypy3'
+      env:
+        - TOXENV=pypy3,report,codecov
 before_install:
   - python --version
   - uname -a
@@ -43,15 +43,17 @@ install:
   - tox --version
   - |
     set -ex
-    # if [[ $TRAVIS_PYTHON_VERSION == 'pypy' ]]; then
-    #     (cd $HOME
-    #      wget https://bitbucket.org/pypy/pypy/downloads/pypy2-v6.0.0-linux64.tar.bz2
-    #      tar xf pypy2-*.tar.bz2
-    #      pypy2-*/bin/pypy -m ensurepip
-    #      pypy2-*/bin/pypy -m pip install -U virtualenv)
-    #     export PATH=$(echo $HOME/pypy2-*/bin):$PATH
-    #     export TOXPYTHON=$(echo $HOME/pypy2-*/bin/pypy)
-    # fi
+    if [[ $TRAVIS_PYTHON_VERSION == 'pypy' ]]; then
+        (cd $HOME
+         wget https://bitbucket.org/pypy/pypy/downloads/pypy2-v6.0.0-linux64.tar.bz2
+         tar xf pypy2-*.tar.bz2
+         pypy2-*/bin/pypy -m ensurepip
+         pypy2-*/bin/pypy -m pip install -U virtualenv
+         pypy2-*/bin/pypy -m pip install -U numpy
+    )
+        export PATH=$(echo $HOME/pypy2-*/bin):$PATH
+        export TOXPYTHON=$(echo $HOME/pypy2-*/bin/pypy)
+    fi
     if [[ $TRAVIS_PYTHON_VERSION == 'pypy3' ]]; then
         (cd $HOME
          wget https://bitbucket.org/pypy/pypy/downloads/pypy3-v6.0.0-linux64.tar.bz2
