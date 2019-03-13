@@ -3,6 +3,8 @@ import requests
 import shutil
 import zipfile
 import glob
+import tifffile
+import numpy as np
 
 from bs4 import BeautifulSoup
 from b3get.utils import filter_files, tmp_location
@@ -156,23 +158,6 @@ def test_008_extract_gt():
     shutil.rmtree(tmp_location())
 
 
-def test_008_images_to_numpy():
-    shutil.rmtree(tmp_location())
-    ds8 = ds_008()
-    imgs = ds8.pull_images()
-    assert len(imgs) > 0
-    assert len(imgs) == 1
-    xtracted = ds8.extract_images()
-    assert len(xtracted) == 24
-    nplist = ds8.folder_to_numpy(os.path.split(xtracted[0])[0])
-    assert nplist
-    assert len(nplist) > 0
-    assert len(nplist) == 24
-    assert nplist[0].shape != tuple()
-    assert nplist[0].shape == (512, 512)
-    shutil.rmtree(tmp_location())
-
-
 def test_006_list_gt():
     ds6 = ds_006()
     imgs = ds6.list_gt()
@@ -187,3 +172,42 @@ def test_024_list():
     assert len(imgs) > 0
     gt = ds.list_gt()
     assert len(gt) > 0
+
+
+def test_008_files_to_numpy():
+    ds = ds_008()
+    _ = ds.pull_images()
+    ximgs = ds.extract_images()
+    assert len(ximgs) > 0
+    assert len(ximgs) == 24
+
+    first = tifffile.imread(ximgs[0])
+    last = tifffile.imread(ximgs[-1])
+
+    npimgs = ds.files_to_numpy(ximgs)
+    assert len(npimgs) == len(ximgs)
+    assert npimgs[0].shape == first.shape
+    assert isinstance(npimgs[0],np.ndarray)
+    assert np.array_equal(npimgs[0][:100], first[:100])
+    assert np.array_equal(npimgs[-1][:100], last[:100])
+    assert npimgs[0].shape == (512, 512)
+
+
+def test_008_ds_images_to_numpy():
+    ds = ds_008()
+    imgs = ds.images_to_numpy()
+    assert len(imgs) > 0
+    assert len(imgs) == 24
+    assert np.all([item.shape == (512, 512) for item in imgs])
+
+    imgs_plus_fnames = ds.images_to_numpy(include_filenames=True)
+    assert len(imgs_plus_fnames) == len(imgs)
+    assert os.path.isfile(imgs_plus_fnames[0][-1])
+
+
+def test_008_ds_gt_to_numpy():
+    ds = ds_008()
+    labs = ds.gt_to_numpy()
+    assert len(labs) > 0
+    assert len(labs) == 24
+    assert np.all([item.shape == (512,512) for item in labs])

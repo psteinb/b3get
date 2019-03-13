@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, with_statement
 
+import re
 import os
 import glob
 import requests
@@ -154,7 +155,9 @@ class dataset():
         return self.pull_files(self.list_gt(), rex=rex)
 
     def extract_files(self, filelist, dstdir):
-        """ unpack each file in <filelist> to folder <dstdir> """
+        """ unpack each file in <filelist> to folder <dstdir>
+        returns a list of extracted files
+        """
 
         value = []
         if not (os.path.exists(dstdir) and os.path.isdir(dstdir)):
@@ -218,25 +221,71 @@ class dataset():
 
         return self.extract_files(cands, datasetdir)
 
-    def folder_to_numpy(self, folder, glob_stmt="*tif"):
-        """ given a folder, sort the found .tif files and try to open them with tifffile and return a list of numpy arrays """
+    def files_to_numpy(self, file_list, filter_for_rex=".*tif"):
+        """ given a list of file_names, sort the found .tif files and try to open them with tifffile and return a list of numpy arrays """
         value = []
-        if not os.path.exists(folder):
+        if not file_list:
             return value
 
-        glob_stmt = os.path.join(folder, glob_stmt)
-        files = glob.glob(glob_stmt)
+        crex = re.compile(filter_for_rex)
+        files = [item for item in file_list if crex.search(item)]
         if not files:
-            print('nothing found at', glob_stmt)
+            print('nothing found at', filter_for_rex,file_list)
             return value
 
+        files = sorted(files)
         for fn in files:
             try:
                 value.append(tifffile.imread(fn))
             except Exception as ex:
                 print('unable to open {0} with tifffile due to {1}'.format(fn, ex))
+                continue
 
         return value
+
+    def zips_to_numpy(self, zipfiles, include_filenames=False):
+        """ given a list of zip files, extract them and read the extracted tifs into a list of np.ndarrays """
+        value = []
+        if not zipfiles:
+            return value
+
+        basedirset = set([os.path.split(item)[0] for item in zipfiles])
+        if len(basedirset) != 1:
+            print('found mixed set of destination folders, doing nothing', basedirset)
+            return value
+        basedir = basedirset.pop()
+        ximgs = self.extract_files(zipfiles, basedir)
+
+        if len(ximgs) > 0 and zipfiles:
+            ximgs = sorted(ximgs)
+            print("\n".join(ximgs))
+            value = self.files_to_numpy(ximgs)
+            if include_filenames:
+                value = list(zip(value, ximgs))
+
+        return value
+
+    def images_to_numpy(self, rex="", include_filenames=False):
+        """ download images if needed and extract them into a list of numpy ndarrays """
+
+        value = []
+        zips = self.pull_images(rex=rex)
+
+        if not zips:
+            return value
+
+        return self.zips_to_numpy(zips, include_filenames)
+
+    def gt_to_numpy(self, rex="", include_filenames=False):
+        """ download images if needed and extract them into a list of numpy ndarrays """
+
+        value = []
+        zips = self.pull_gt(rex=rex)
+
+        if not zips:
+            return value
+
+        return self.zips_to_numpy(zips, include_filenames)
 
 
 class ds_006(dataset):
@@ -246,6 +295,22 @@ class ds_006(dataset):
             super().__init__(baseurl=baseurl, datasetid=datasetid)
         else:
             dataset.__init__(self, baseurl=baseurl, datasetid=datasetid)
+
+    def images_to_numpy(self, rex=".*(1[1-9]|2[0-3]).zip"):
+        """ download images if needed and extract them into a list of numpy ndarrays """
+
+        if six.PY3:
+            return super().images_to_numpy(rex=rex)
+        else:
+            return dataset.images_to_numpy(rex=rex)
+
+    def gt_to_numpy(self, rex="labels"):
+        """ download images if needed and extract them into a list of numpy ndarrays """
+
+        if six.PY3:
+            return super().gt_to_numpy(rex=rex)
+        else:
+            return dataset.gt_to_numpy(rex=rex)
 
 
 class ds_008(dataset):
@@ -273,3 +338,19 @@ class ds_024(dataset):
             super().__init__(baseurl=baseurl, datasetid=datasetid)
         else:
             dataset.__init__(self, baseurl=baseurl, datasetid=datasetid)
+
+    def images_to_numpy(self, rex=".*TIFF.zip"):
+        """ download images if needed and extract them into a list of numpy ndarrays """
+
+        if six.PY3:
+            return super().images_to_numpy(rex=rex)
+        else:
+            return dataset.images_to_numpy(rex=rex)
+
+    def gt_to_numpy(self, rex="foreground"):
+        """ download images if needed and extract them into a list of numpy ndarrays """
+
+        if six.PY3:
+            return super().gt_to_numpy(rex=rex)
+        else:
+            return dataset.gt_to_numpy(rex=rex)
