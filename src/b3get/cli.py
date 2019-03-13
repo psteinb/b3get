@@ -140,7 +140,12 @@ The most commonly used commands are:\n'''
         parser = argparse.ArgumentParser(
             description='show URLs for given dataset')
         parser.add_argument('datasets', nargs='+', help='dataset(s) to download')
-        parser.add_argument('-x', '--experimental', default=True, action='store_true', help='try an unconfigured dataset')
+        parser.add_argument('--rex', action='store', type=str, default=None,
+                            help='regular expression to limit the images to download')
+        parser.add_argument('-x', '--experimental', default=True, action='store_true',
+                            help='try an unconfigured dataset')
+        parser.add_argument('--lrex', action='store', type=str, default=None,
+                            help='regular expression to limit the labels to download')
         parser.add_argument('-s', '--add_size', default=False, action='store_true', help='add size in MB of file')
         # now that we're inside a subcommand, ignore the first
         # TWO argvs, ie the command (git) and the subcommand (commit)
@@ -159,7 +164,10 @@ The most commonly used commands are:\n'''
                 ds = eval('datasets.dataset(baseurl="https://data.broadinstitute.org/bbbc/BBBC{0:03}/")'.format(dsid))
 
             files = ds.list_images()
-            files.extend(ds.list_gt())
+            files = filter_files(files, rex=args.rex)
+            gt = ds.list_gt()
+            gt = filter_files(gt, rex=args.lrex)
+            files.extend(gt)
 
             for fname in files:
                 url = os.path.join(ds.baseurl, fname)
