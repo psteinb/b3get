@@ -218,7 +218,7 @@ class dataset():
 
         return self.extract_files(cands, datasetdir)
 
-    def to_numpy(self, folder, glob_stmt="*tif"):
+    def folder_to_numpy(self, folder, glob_stmt="*tif"):
         """ given a folder, sort the found .tif files and try to open them with tifffile and return a list of numpy arrays """
         value = []
         if not os.path.exists(folder):

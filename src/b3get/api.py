@@ -28,7 +28,7 @@ def to_numpy(dataset_id=None, labels_match='foreground'):
     if len(ximgs) > 0 and imgs:
         ximgs = sorted(ximgs)
         basepath = os.path.split(ximgs[0])[0]
-        value = (ds.to_numpy(basepath), None)
+        value = (ds.folder_to_numpy(basepath), None)
     else:
         print('extraction of images failed\n', ximgs)
 
@@ -37,7 +37,7 @@ def to_numpy(dataset_id=None, labels_match='foreground'):
     if len(xlabs) > 0 and labs:
         xlabs = sorted(xlabs)
         basepath = os.path.split(xlabs[0])[0]
-        value = (value[0], ds.to_numpy(basepath))
+        value = (value[0], ds.folder_to_numpy(basepath))
     else:
         print('extraction of labels failed\n', xlabs, labels_match)
 
