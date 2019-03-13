@@ -22,7 +22,7 @@ import sys
 import traceback
 from b3get import datasets
 from b3get.utils import filter_files, size_of_content
-
+import b3get
 
 class b3get_cli(object):
 
@@ -170,6 +170,14 @@ The most commonly used commands are:\n'''
                     print(url)
 
         self.exit_code = 0
+
+    def version(self):
+        """ show the version of b3get """
+
+        print('b3get',b3get.__version__)
+        self.exit_code = 0
+
+
 
 
 def main(args=sys.argv):
