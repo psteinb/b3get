@@ -1,6 +1,4 @@
-# b3get 
-
-[![Build Status](https://travis-ci.com/psteinb/b3get.svg?branch=master)](https://travis-ci.com/psteinb/b3get)
+# b3get [![Build Status](https://travis-ci.com/psteinb/b3get.svg?branch=master)](https://travis-ci.com/psteinb/b3get) [![codecov](https://codecov.io/gh/psteinb/b3get/branch/master/graph/badge.svg)](https://codecov.io/gh/psteinb/b3get)
 
 A python module to download [Broad Bioimage Benchmark Collection](https://data.broadinstitute.org/bbbc/image_sets.html) images.
 
