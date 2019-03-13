@@ -20,6 +20,9 @@ import inspect
 import os
 import sys
 import traceback
+import numpy as np
+import math
+
 from b3get import datasets
 from b3get.utils import filter_files, size_of_content
 import b3get
@@ -109,6 +112,121 @@ The most commonly used commands are:\n'''
                     print('[dryrun] pulling', os.path.join(ds.baseurl, fname))
             else:
                 ds.pull_files(files, dstdir=args.to, nprocs=int(args.nprocs))
+
+        self.exit_code = 0
+
+    def resave(self):
+        """ resave a dataset to .npz format """
+        parser = argparse.ArgumentParser(
+            description='resave dataset to .npz format')
+        # prefixing the argument with -- means it's optional
+        parser.add_argument('-o', '--to', action='store', default='.', type=str,
+                            help='directory where to store the downloaded dataset (error if it doesn\'t exist')
+        parser.add_argument('--rex', action='store', type=str, default='',
+                            help='regular expression to limit the images to download')
+        parser.add_argument('-x', '--experimental', default=True, action='store_true',
+                            help='try an unconfigured dataset')
+        parser.add_argument('--lrex', action='store', type=str,
+                            help='regular expression to limit the labels to download')
+        parser.add_argument('-n', '--dryrun', action='store_true', default=False,
+                            help='don\'t download, just print filenames')
+
+        parser.add_argument('-m', '--max_megabytes', action='store', default=0, type=int,
+                            help='produce at max files that are close to max_megabytes in size (0 refers to one single blob)')
+
+        parser.add_argument('-j', '--nprocs', action='store', default=1,
+                            help='perform <nprocs> many parallel downloads')
+        parser.add_argument('datasets', nargs='+', help='dataset(s) to download')
+        # now that we're inside a subcommand, ignore the first
+        # TWO argvs, ie the command (git) and the subcommand (commit)
+        args = parser.parse_args(self.args[2:])
+
+        if not hasattr(args, 'datasets'):
+            print('no datasets given', args)
+            parser.print_help()
+            return
+
+        if not os.path.isdir(args.to):
+            print('{0} does not exist, please create it first'.format(args.to))
+            return
+
+        for item in args.datasets:
+            ds = None
+            dsid = int(item)
+            if not args.experimental:
+                ds = eval('datasets.ds_{0:03}()'.format(dsid))
+            else:
+                ds = eval('datasets.dataset(baseurl="https://data.broadinstitute.org/bbbc/BBBC{0:03}/")'.format(dsid))
+
+            print('fetching image information for dataset', dsid)
+            files = ds.list_images()
+            imgs = filter_files(files, args.rex)
+            files = imgs[:]
+
+            gt = ds.list_gt()
+            gt = filter_files(gt, args.lrex)
+            files.extend(gt)
+
+            if args.dryrun:
+                for fname in files:
+                    print('[dryrun] pulling', os.path.join(ds.baseurl, fname))
+                return
+
+            zipimgs = ds.pull_files(imgs, dstdir=args.to, nprocs=int(args.nprocs))
+            zipgt = ds.pull_files(gt, dstdir=args.to, nprocs=int(args.nprocs))
+
+            if zipimgs:
+                npimgs = ds.zips_to_numpy(zipimgs)
+                fname = os.path.join(args.to, 'BBBC{0:03}_images.npz'.format(dsid))
+                if args.max_megabytes == 0:
+                    np.savez_compressed(fname, *npimgs)
+                    if os.path.isfile(fname):
+                        print('image resave successful ', fname)
+                    else:
+                        self.exit_code = 1
+                        print('image resave failed ', fname)
+                        return
+                else:
+                    #TODO refactor into function
+                    total_bytes = len(npimgs)*len(npimgs[0].bytes())
+                    total_mb = total_bytes/(1024.*1024.)
+                    if total_mb > args.max_megabytes:
+                        nchunks = math.ceil(total_mb/args.max_megabytes)
+                        nitems = math.ceil(len(npimgs)/nchunks)
+                        cnt = 0
+                        for i in range(nchunks):
+                            if cnt >= len(npimgs):
+                                break
+                            end = -1 if cnt+nitems > len(npimgs) else cnt+nitems
+                            np.savez_compressed(fname.replace('.npz',str(i)+'.npz'), *npimgs[cnt:end])
+                            cnt += nitems
+
+            if zipgt:
+                npgt = ds.zips_to_numpy(zipgt)
+                fname = os.path.join(args.to, 'BBBC{0:03}_labels.npz'.format(dsid))
+
+                if args.max_megabytes == 0:
+                    np.savez_compressed(fname, *npgt)
+                    if os.path.isfile(fname):
+                        print('label resave successful ', fname)
+                    else:
+                        self.exit_code = 1
+                        print('image resave failed ', fname)
+                        return
+                else:
+                    #TODO refactor into function
+                    total_bytes = len(npgt)*len(npgt[0].bytes())
+                    total_mb = total_bytes/(1024.*1024.)
+                    if total_mb > args.max_megabytes:
+                        nchunks = math.ceil(total_mb/args.max_megabytes)
+                        nitems = math.ceil(len(npgt)/nchunks)
+                        cnt = 0
+                        for i in range(nchunks):
+                            if cnt >= len(npgt):
+                                break
+                            end = -1 if cnt+nitems > len(npgt) else cnt+nitems
+                            np.savez_compressed(fname.replace('.npz',str(i)+'.npz'), *npgt[cnt:end])
+                            cnt += nitems
 
         self.exit_code = 0
 
