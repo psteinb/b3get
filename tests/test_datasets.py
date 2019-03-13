@@ -164,7 +164,7 @@ def test_008_images_to_numpy():
     assert len(imgs) == 1
     xtracted = ds8.extract_images()
     assert len(xtracted) == 24
-    nplist = ds8.to_numpy(os.path.split(xtracted[0])[0])
+    nplist = ds8.folder_to_numpy(os.path.split(xtracted[0])[0])
     assert nplist
     assert len(nplist) > 0
     assert len(nplist) == 24

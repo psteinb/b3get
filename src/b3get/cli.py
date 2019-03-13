@@ -182,10 +182,8 @@ The most commonly used commands are:\n'''
     def version(self):
         """ show the version of b3get """
 
-        print('b3get',b3get.__version__)
+        print('b3get', b3get.__version__)
         self.exit_code = 0
-
-
 
 
 def main(args=sys.argv):
