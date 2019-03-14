@@ -91,3 +91,41 @@ def test_in_chunks_too_large(list_of_ndarrays):
     assert front_size > 22
 
     [os.remove(f) for f in files]
+
+
+def test_with_quarter_gb(list_of_ndarrays):
+
+    for idx in range(len(list_of_ndarrays)):
+
+        list_of_ndarrays[idx].resize(256, 256, 256)
+        list_of_ndarrays[idx][:] = idx
+
+    tmpf = tempfile.mktemp()
+    files = chunk_npz(list_of_ndarrays, tmpf, 128)
+    assert len(files) > 0
+    assert len(files) == 8
+    front_size = os.stat(files[0]).st_size
+    back_size = os.stat(files[-1]).st_size
+
+    assert front_size > 22
+    assert back_size > 22
+
+    front = np.load(files[0])
+    back = np.load(files[-1])
+
+    assert len(front.files) > 0
+    assert len(back.files) > 0
+    assert len(back.files) == len(front.files)
+
+    assert front[front.files[0]].nbytes > 0
+    assert back[back.files[0]].nbytes > 0
+
+    assert front[front.files[0]].shape == (256, 256, 256)
+    assert back[back.files[0]].shape == (256, 256, 256)
+
+    assert front[front.files[0]].shape == list_of_ndarrays[0].shape
+    assert np.all(front[front.files[0]] == list_of_ndarrays[0])
+
+    assert back[back.files[-1]].shape == list_of_ndarrays[-1].shape
+    assert np.all(back[back.files[-1]] == list_of_ndarrays[-1])
+    [os.remove(f) for f in files]
