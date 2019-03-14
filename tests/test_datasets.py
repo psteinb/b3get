@@ -154,7 +154,7 @@ def test_008_extract_gt():
     xtracted = ds8.extract_gt()
     assert xtracted
     assert len(xtracted) > 0
-    assert len(xtracted) == 24
+    assert len(xtracted) == 24+1  # +1 for .DS_Store file contained
     shutil.rmtree(tmp_location())
 
 
@@ -164,7 +164,7 @@ def test_006_list_gt():
     assert len(imgs) > 0
     assert len(imgs) == 1
     assert "BBBC006_v1_labels.zip" in imgs
-    shutil.rmtree(ds.tmp_location)
+    shutil.rmtree(ds6.tmp_location)
 
 
 def test_024_list():
@@ -173,7 +173,6 @@ def test_024_list():
     assert len(imgs) > 0
     gt = ds.list_gt()
     assert len(gt) > 0
-    shutil.rmtree(ds.tmp_location)
 
 
 def test_008_extract_images():
@@ -181,7 +180,7 @@ def test_008_extract_images():
     _ = ds.pull_images()
     ximgs = ds.extract_images()
     assert len(ximgs) > 0
-    assert len(ximgs) == 24
+    assert len(ximgs) == 24+3  # +3 for .DS_Store and similar files contained
     shutil.rmtree(ds.tmp_location)
 
 
@@ -190,7 +189,7 @@ def test_008_extract_images_nprocs2():
     _ = ds.pull_images()
     ximgs = ds.extract_images(folder=None, nprocs=2)
     assert len(ximgs) > 0
-    assert len(ximgs) == 24
+    assert len(ximgs) == 24+3  # +3 for .DS_Store and similar files contained
     shutil.rmtree(ds.tmp_location)
 
 
@@ -199,16 +198,18 @@ def test_008_extract_gt_nprocs2():
     _ = ds.pull_gt()
     ximgs = ds.extract_gt(folder=None, nprocs=2)
     assert len(ximgs) > 0
-    assert len(ximgs) == 24
+    assert len(ximgs) == 24+1  # +1 for .DS_Store file contained
     shutil.rmtree(ds.tmp_location)
+
 
 def test_008_files_to_numpy():
     ds = ds_008()
     _ = ds.pull_images()
     ximgs = ds.extract_images()
     assert len(ximgs) > 0
-    assert len(ximgs) == 24
+    assert len(ximgs) == 24+3  # +3 for .DS_Store and similar files contained
 
+    ximgs = [item for item in ximgs if item.count('.tif')]
     first = tifffile.imread(ximgs[0])
     last = tifffile.imread(ximgs[-1])
 
@@ -240,5 +241,5 @@ def test_008_ds_gt_to_numpy():
     labs = ds.gt_to_numpy()
     assert len(labs) > 0
     assert len(labs) == 24
-    assert np.all([item.shape == (512,512) for item in labs])
+    assert np.all([item.shape == (512, 512) for item in labs])
     shutil.rmtree(ds.tmp_location)
