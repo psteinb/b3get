@@ -164,6 +164,7 @@ def test_006_list_gt():
     assert len(imgs) > 0
     assert len(imgs) == 1
     assert "BBBC006_v1_labels.zip" in imgs
+    shutil.rmtree(ds.tmp_location)
 
 
 def test_024_list():
@@ -172,7 +173,34 @@ def test_024_list():
     assert len(imgs) > 0
     gt = ds.list_gt()
     assert len(gt) > 0
+    shutil.rmtree(ds.tmp_location)
 
+
+def test_008_extract_images():
+    ds = ds_008()
+    _ = ds.pull_images()
+    ximgs = ds.extract_images()
+    assert len(ximgs) > 0
+    assert len(ximgs) == 24
+    shutil.rmtree(ds.tmp_location)
+
+
+def test_008_extract_images_nprocs2():
+    ds = ds_008()
+    _ = ds.pull_images()
+    ximgs = ds.extract_images(folder=None, nprocs=2)
+    assert len(ximgs) > 0
+    assert len(ximgs) == 24
+    shutil.rmtree(ds.tmp_location)
+
+
+def test_008_extract_gt_nprocs2():
+    ds = ds_008()
+    _ = ds.pull_gt()
+    ximgs = ds.extract_gt(folder=None, nprocs=2)
+    assert len(ximgs) > 0
+    assert len(ximgs) == 24
+    shutil.rmtree(ds.tmp_location)
 
 def test_008_files_to_numpy():
     ds = ds_008()
@@ -187,10 +215,11 @@ def test_008_files_to_numpy():
     npimgs = ds.files_to_numpy(ximgs)
     assert len(npimgs) == len(ximgs)
     assert npimgs[0].shape == first.shape
-    assert isinstance(npimgs[0],np.ndarray)
+    assert isinstance(npimgs[0], np.ndarray)
     assert np.array_equal(npimgs[0][:100], first[:100])
     assert np.array_equal(npimgs[-1][:100], last[:100])
     assert npimgs[0].shape == (512, 512)
+    shutil.rmtree(ds.tmp_location)
 
 
 def test_008_ds_images_to_numpy():
@@ -203,6 +232,7 @@ def test_008_ds_images_to_numpy():
     imgs_plus_fnames = ds.images_to_numpy(include_filenames=True)
     assert len(imgs_plus_fnames) == len(imgs)
     assert os.path.isfile(imgs_plus_fnames[0][-1])
+    shutil.rmtree(ds.tmp_location)
 
 
 def test_008_ds_gt_to_numpy():
@@ -211,3 +241,4 @@ def test_008_ds_gt_to_numpy():
     assert len(labs) > 0
     assert len(labs) == 24
     assert np.all([item.shape == (512,512) for item in labs])
+    shutil.rmtree(ds.tmp_location)
