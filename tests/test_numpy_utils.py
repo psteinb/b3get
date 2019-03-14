@@ -37,8 +37,9 @@ def test_np_savez_reopen(list_of_ndarrays):
 
     npt = np.load(tmpf)
     assert len(npt.files) == 16
-    assert npt.files[0] == 'arr_0'
-    assert npt.files[-1] == 'arr_15'
+    fnames = sorted(npt.files)
+    assert fnames[0] == 'arr_0'
+    assert fnames[-1] == 'arr_15'
     front = npt['arr_0']
     back = npt['arr_15']
     assert np.all(front[:16, 0] == 0)
