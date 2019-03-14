@@ -164,7 +164,6 @@ def test_006_list_gt():
     assert len(imgs) > 0
     assert len(imgs) == 1
     assert "BBBC006_v1_labels.zip" in imgs
-    shutil.rmtree(ds6.tmp_location)
 
 
 def test_024_list():
