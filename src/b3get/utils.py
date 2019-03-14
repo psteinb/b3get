@@ -110,7 +110,7 @@ def chunk_npz(ndalist, basename, max_megabytes=1):
         nitems = math.ceil(len(ndalist)/nchunks)
         ndigits = len(str(nchunks))
         cnt = 0
-        for i in range(nchunks):
+        for i in range(int(math.ceil(nchunks))):
             if cnt >= len(ndalist):
                 break
             end = -1 if cnt+nitems > len(ndalist) else cnt+nitems
