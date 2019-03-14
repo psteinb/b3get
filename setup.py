@@ -25,7 +25,7 @@ def read(*names, **kwargs):
 
 setup(
     name='b3get',
-    version='version='0.4.1'',
+    version='version='0.4.2'',
     license='BSD 3-Clause License',
     description='library to download image sets from Broad Bioimage Benchmark Collection images',
     long_description='%s\n%s' % (
