@@ -5,6 +5,8 @@ import os
 import re
 import requests
 import tqdm
+import math
+import numpy as np
 
 
 def tmp_location():
@@ -86,4 +88,36 @@ def serial_download_file(url, dstfolder, chunk_bytes=1024*1024, npos=None):
 
 
 def wrap_serial_download_file(args):
+    """ wrap serial_download to unpack args """
+
     return serial_download_file(*args)
+
+
+def chunk_npz(ndalist, basename, max_megabytes=1):
+    """ given a list of numpy.ndarrays <ndalist>, store them compressed inside <basename>
+    if the storage volume of ndalist exceeds max_megabytes, chunk the data
+
+    """
+    total_bytes = sum([item.nbytes for item in ndalist])
+    total_mb = total_bytes/(1024.*1024.)
+    value = []
+    if total_mb > max_megabytes:
+        nchunks = math.ceil(total_mb/max_megabytes)
+        nitems = math.ceil(len(ndalist)/nchunks)
+        ndigits = len(str(nchunks))
+        cnt = 0
+        for i in range(nchunks):
+            if cnt >= len(ndalist):
+                break
+            end = -1 if cnt+nitems > len(ndalist) else cnt+nitems
+            dst = basename+(('{0:0'+str(ndigits)+'}.npz').format(i))
+            np.savez_compressed(dst,
+                                *ndalist[cnt:end])
+            cnt += nitems
+            value.append(dst)
+    else:
+        dst = basename+'.npz'
+        np.savez_compressed(dst,
+                            *ndalist)
+        value.append(dst)
+    return value
