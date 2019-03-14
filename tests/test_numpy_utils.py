@@ -93,12 +93,11 @@ def test_in_chunks_too_large(list_of_ndarrays):
     [os.remove(f) for f in files]
 
 
-def test_with_quarter_gb(list_of_ndarrays):
+def test_with_quarter_gb():
 
-    for idx in range(len(list_of_ndarrays)):
-
-        list_of_ndarrays[idx].resize(256, 256, 256)
-        list_of_ndarrays[idx][:] = idx
+    list_of_ndarrays = [np.ones(shape=(256, 256, 256), dtype='uint32') for i in range(16)]
+    for idx, npa in enumerate(list_of_ndarrays):
+        npa = npa*idx
 
     tmpf = tempfile.mktemp()
     files = chunk_npz(list_of_ndarrays, tmpf, 128)
