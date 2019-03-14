@@ -7,7 +7,7 @@ import requests
 import tqdm
 import math
 import numpy as np
-
+import zipfile
 
 def tmp_location():
     """ return a folder under /tmp or similar,
@@ -120,4 +120,26 @@ def chunk_npz(ndalist, basename, max_megabytes=1):
         np.savez_compressed(dst,
                             *ndalist)
         value.append(dst)
+    return value
+
+
+def unzip_to(azipfile, basedir, force=False):
+    """ unzip file <zipfile> into <basedir>
+    If the full content of <zipfile> is already found inside <basedir>, do nothing.
+    If <force> is True, always unzip"""
+
+    value = []
+    zf = zipfile.ZipFile(azipfile, 'r')
+    content = zf.infolist()
+    if not content:
+        return value
+
+    for info in content:
+        xsize = info.file_size
+        xname = info.filename
+        exp_path = os.path.join(basedir, xname)
+        if not os.path.isfile(exp_path) or not os.stat(exp_path).st_size == xsize:
+            zf.extract(xname, basedir)
+        value.append(exp_path)
+
     return value
