@@ -218,6 +218,19 @@ The most commonly used commands are:\n'''
             if dsid in datasets.TESTED_DATASETS.keys():
                 print("BBBC{0:03} {1}".format(i, datasets.TESTED_DATASETS[dsid]))
 
+        for dsid in range(1, 43):
+            if dsid in av:
+                continue
+            try:
+                ds = eval('datasets.dataset(baseurl="https://data.broadinstitute.org/bbbc/BBBC{0:03}/")'.format(dsid))
+            except Exception as ex:
+                continue
+
+            try:
+                print("[experimental] {0}".format(ds.title()))
+            except Exception as ex:
+                continue
+
         self.exit_code = 0
 
     def show(self):
