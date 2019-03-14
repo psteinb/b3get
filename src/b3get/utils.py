@@ -9,6 +9,7 @@ import math
 import numpy as np
 import zipfile
 
+
 def tmp_location():
     """ return a folder under /tmp or similar,
     If something exists that matches the name '.*-b3get', use this.
@@ -98,9 +99,12 @@ def chunk_npz(ndalist, basename, max_megabytes=1):
     if the storage volume of ndalist exceeds max_megabytes, chunk the data
 
     """
+    value = []
+    if not ndalist:
+        return value
+
     total_bytes = sum([item.nbytes for item in ndalist])
     total_mb = total_bytes/(1024.*1024.)
-    value = []
     if total_mb > max_megabytes:
         nchunks = math.ceil(total_mb/max_megabytes)
         nitems = math.ceil(len(ndalist)/nchunks)
@@ -143,3 +147,8 @@ def unzip_to(azipfile, basedir, force=False):
         value.append(exp_path)
 
     return value
+
+
+def wrap_unzip_to(args):
+    """ wrapper around unzip_to that unpacks the arguments """
+    return unzip_to(*args)
