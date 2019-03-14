@@ -9,7 +9,7 @@ import tifffile
 import six
 
 from bs4 import BeautifulSoup
-from b3get.utils import tmp_location, filter_files, size_of_content, wrap_serial_download_file
+from b3get.utils import tmp_location, filter_files, size_of_content, wrap_serial_download_file, wrap_unzip_to
 from tqdm import tqdm
 from multiprocessing import Pool, freeze_support, RLock, cpu_count
 
@@ -154,7 +154,7 @@ class dataset():
         """ given a regular expression <rex>, download the ground truth files matching it from the dataset site """
         return self.pull_files(self.list_gt(), rex=rex)
 
-    def extract_files(self, filelist, dstdir):
+    def extract_files(self, filelist, dstdir, nprocs=1):
         """ unpack each file in <filelist> to folder <dstdir>
         returns a list of extracted files
         """
@@ -164,23 +164,20 @@ class dataset():
             print('{0} does not exists, will not extract anything to it')
             return value
 
-        for fn in filelist:
-            xpaths = None
-            with zipfile.ZipFile(fn, 'r') as zf:
-                print('extracting ', fn)
-                zf.extractall(dstdir)
-                xpaths = zf.namelist()
-                zf.close()
+        workers = Pool(nprocs)
+        inputargs = list(zip(filelist,
+                             [dstdir]*len(filelist)))
+        zresults = workers.map(wrap_unzip_to, inputargs)
 
-            for entry in xpaths:
-                loc = os.path.join(dstdir, entry)
-                basedir, fname = os.path.split(loc)
-                if os.path.isfile(loc) and ".tif" in fname and "__MACOSX" not in basedir:
-                    value.append(loc)
+        for res in zresults:
+            for fn in res:
+                basedir, fname = os.path.split(fn)
+                if os.path.isfile(fn) and "__MACOSX" not in basedir:
+                    value.append(fn)
 
         return value
 
-    def extract_images(self, folder=None):
+    def extract_images(self, folder=None, nprocs=1):
         """ check folder for downloaded image zip files, if anything is found, extract them """
 
         if not folder:
@@ -196,9 +193,9 @@ class dataset():
         if not os.path.exists(datasetdir):
             os.makedirs(datasetdir)
 
-        return self.extract_files(cands, datasetdir)
+        return self.extract_files(cands, datasetdir, nprocs)
 
-    def extract_gt(self, folder=None):
+    def extract_gt(self, folder=None, nprocs=1):
         """ extract the ground truth files found in <folder>, returns list of files extracted """
 
         if not folder:
@@ -219,7 +216,7 @@ class dataset():
         if not os.path.exists(datasetdir):
             os.makedirs(datasetdir)
 
-        return self.extract_files(cands, datasetdir)
+        return self.extract_files(cands, datasetdir, nprocs)
 
     def files_to_numpy(self, file_list, filter_for_rex=".*tif"):
         """ given a list of file_names, sort the found .tif files and try to open them with tifffile and return a list of numpy arrays """
@@ -227,10 +224,14 @@ class dataset():
         if not file_list:
             return value
 
+        if not filter_for_rex.count('tif'):
+            print('only tif files are supported')
+            return value
+
         crex = re.compile(filter_for_rex)
         files = [item for item in file_list if crex.search(item)]
         if not files:
-            print('nothing found at', filter_for_rex,file_list)
+            print('nothing found for {0} in {1} ...'.format(filter_for_rex, " ".join(file_list[1:3])))
             return value
 
         files = sorted(files)
@@ -243,7 +244,7 @@ class dataset():
 
         return value
 
-    def zips_to_numpy(self, zipfiles, include_filenames=False):
+    def zips_to_numpy(self, zipfiles, include_filenames=False, nprocs=1):
         """ given a list of zip files, extract them and read the extracted tifs into a list of np.ndarrays """
         value = []
         if not zipfiles:
@@ -253,12 +254,12 @@ class dataset():
         if len(basedirset) != 1:
             print('found mixed set of destination folders, doing nothing', basedirset)
             return value
-        basedir = basedirset.pop()
-        ximgs = self.extract_files(zipfiles, basedir)
 
+        basedir = basedirset.pop()
+        ximgs = self.extract_files(zipfiles, basedir, nprocs)
         if len(ximgs) > 0 and zipfiles:
             ximgs = sorted(ximgs)
-            print("\n".join(ximgs))
+
             value = self.files_to_numpy(ximgs)
             if include_filenames:
                 value = list(zip(value, ximgs))
