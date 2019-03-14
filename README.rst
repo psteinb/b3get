@@ -35,9 +35,9 @@ Overview
     :alt: PyPI Package latest release
     :target: https://pypi.org/project/b3get
 
-.. |commits-since| image:: https://img.shields.io/github/commits-since/psteinb/b3get/vv0.3.0..svg
+.. |commits-since| image:: https://img.shields.io/github/commits-since/psteinb/b3get/vv0.4.0..svg
     :alt: Commits since latest release
-    :target: https://github.com/psteinb/b3get/compare/vv0.3.0....master
+    :target: https://github.com/psteinb/b3get/compare/vv0.4.0....master
 
 .. |wheel| image:: https://img.shields.io/pypi/wheel/b3get.svg
     :alt: PyPI Wheel
