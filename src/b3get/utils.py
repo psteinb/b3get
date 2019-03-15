@@ -106,8 +106,8 @@ def chunk_npz(ndalist, basename, max_megabytes=1):
     total_bytes = sum([item.nbytes for item in ndalist])
     total_mb = total_bytes/(1024.*1024.)
     if total_mb > max_megabytes:
-        nchunks = math.ceil(total_mb/max_megabytes)
-        nitems = math.ceil(len(ndalist)/nchunks)
+        nchunks = int(math.ceil(total_mb/max_megabytes))
+        nitems = int(math.ceil(len(ndalist)/nchunks))
         ndigits = len(str(nchunks))
         cnt = 0
         for i in range(int(math.ceil(nchunks))):
